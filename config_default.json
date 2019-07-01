@@ -1,0 +1,15 @@
+{
+  "RED_CAP_ENGINE":
+     {
+		"URL": "https://cdsweb07.fhcrc.org/redcap/redcap_v9.1.2/",
+		"API": "<API_TOKEN>"
+	},
+	"HEADERS": ["PID", "numerics", "codes", "to_event", "target"],
+	"OUTPUT_FILEPATH": "./adaptive_therapies",
+	"DEFAULT_VALUES":{
+		"X":0,
+		"Y":0,
+		"Z":0
+	}
+
+}
