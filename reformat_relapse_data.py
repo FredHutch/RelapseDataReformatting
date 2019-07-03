@@ -1,6 +1,5 @@
 import json
 import os
-import pandas as pd
 
 from redcap import Project, RedcapError
 
