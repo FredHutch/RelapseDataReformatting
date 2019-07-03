@@ -13,11 +13,10 @@ def pull_from_red_cap(config):
 	project = Project(URL, API_KEY)
 
 	try:
-	    data = project.export_records()
+	    intermediate_df = project.export_records(format='df')
 	except RedcapError:
 	    print ("Failure to export records from REDCap")
 
-	intermediate_df = project.export_records(format='df')
 	print (str(len(intermediate_df) )+ ' total records pulled')
 	intermediate_df.to_csv(config['OUTPUT_FILEPATH'] + os.path.sep + 'intermediate_df.csv')
 	
