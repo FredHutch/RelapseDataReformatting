@@ -1,6 +1,9 @@
 # ignore the config file with secrets
 config.json
 
+# ignore any output data
+data/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
