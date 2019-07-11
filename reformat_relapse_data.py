@@ -19,7 +19,7 @@ def pull_from_red_cap(config):
         print ("Failure to export records from REDCap")
 
     print (str(len(intermediate_df) )+ ' total records pulled')
-    intermediate_df.to_csv(path_or_buf=(config['OUTPUT_FILEPATH'] + os.path.sep + 'intermediate_df.csv)'))
+    intermediate_df.to_csv(path_or_buf=(config['OUTPUT_FILEPATH'] + os.path.sep + 'intermediate_df.csv'))
     
 
 if __name__ == '__main__':
