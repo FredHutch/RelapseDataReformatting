@@ -1,6 +1,9 @@
 # ignore the config file with secrets
 config.json
 
+#ignore IDE metadata
+.idea/
+
 # ignore any output data
 data/*
 
