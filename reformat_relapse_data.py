@@ -17,6 +17,7 @@ def pull_from_red_cap(config):
     for form in project.forms:
         try:
             intermediate_df = project.export_records(forms=[form], format='df')
+            intermediate_df = intermediate_df.loc[intermediate_df['redcap_repeat_instrument'].notnull()]
         except RedcapError:
             print ("Failure to export records from REDCap for form: {}".format(form))
             continue
