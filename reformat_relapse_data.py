@@ -17,8 +17,15 @@ def pull_from_red_cap(config):
     for form in project.forms:
         try:
             intermediate_df = project.export_records(forms=[form], format='df')
+
+            '''
+            Death status is included by default in most instruments
+            and appears as an extra row with *mostly* empty columns
+            we are dropping it for profiling purposes since it throws the counts/correlations off.
+            '''
+            intermediate_df = intermediate_df.loc[intermediate_df['redcap_repeat_instrument'].notnull()]
         except RedcapError:
-            print ("Failure to export records from REDCap for form: {}".format(form))
+            print("Failure to export records from REDCap for form: {}".format(form))
             continue
 
         intermediate_df.isna().sum()
@@ -29,6 +36,7 @@ def pull_from_red_cap(config):
 
         report = pandas_profiling.ProfileReport(intermediate_df)
         report.to_file(os.path.sep.join([config["OUTPUT_FILEPATH"], "{}.html".format(form)]))
+
 
 if __name__ == '__main__':
     with open('./config.json') as fin:
