@@ -1,8 +1,8 @@
 ---
 title: "AML Outcome Summary"
 output: bookdown::html_document2
-        github_document
-always_allow_html: yes
+        #github_document
+#always_allow_html: yes
 ---
 
 ```{r echo=F, message=F, warning=F}
@@ -49,7 +49,7 @@ death = response %>%
 treatment_sub = treatment %>%
   mutate(tx_cat = names(treatment[,5:18])[max.col(treatment[,5:18])]) %>%
   filter(redcap_repeat_instrument!='') %>%
-  mutate(maintenance_consolidation = ifelse(rx_indication %in% c(2,3,6,7,8), 1, 0)) %>%
+  mutate(maintenance_consolidation = ifelse(rx_indication %in% c(3,4,6,7,8), 1, 0)) %>%
   select(subject_id, redcap_repeat_instrument, tx_cat, maintenance_consolidation, date_treatment) %>%
   rename(event_type = tx_cat, 
          event_date=date_treatment)
@@ -78,7 +78,9 @@ event_data = response_sub %>%
 
 # Definition
 
-- **Consolidation or maintenance**: 1 when rx_indication in [2,3,6,7,8], 0 otherwise.
+- **Consolidation or maintenance**: 
+  - 1 : when rx_indication in [3 (Consolidation of CR),4(Maintenance of CR),6(Induction f/b "consolidation" (no restaging between)),7(Induction f/b "maintenance" (no restaging between)),8 (Consolidation f/b "maintenance" (no restaging between))];
+  - 0 otherwise.
 - **decision points**: if it is a treatment, but not a consolidation or maintenance treatment.
 - **Days between decision points**: days between two adjcent decision points
 - **Days between decision point and relapse**: days between the relapse and the last decision points, e.g., date at relapse - date at last decision point
@@ -126,22 +128,28 @@ event_sum %>% select(is_treatment, is_CR) %>% table()
 
 **1. No. of treatments**
 
+Patient counts per each number of treatment, e.g., 56 patients has 0 treatments.
+
 ```{r}
-event_sum %>% select(n_treatment) %>% summary()
+#event_sum %>% select(n_treatment) %>% summary()
+table(event_sum$n_treatment)
 ```
 
 ```{r message=F, fig.cap='Number of treatments'}
-event_sum %>% ggplot(aes(x = n_treatment, fill = is_treatment)) + geom_histogram() + scale_fill_discrete('') + theme(legend.position = 'bottom') + scale_x_continuous('Number of treatments', breaks = seq(0, 17)) + ylab('Number of patients')
+event_sum %>% ggplot(aes(x = n_treatment, fill = is_treatment)) + geom_histogram() + scale_fill_discrete('') + theme(legend.position = 'bottom') + scale_x_continuous('Number of treatments', breaks = seq(0, 17)) + scale_y_continuous('Number of patients', breaks = seq(0, 150, by = 30))
 ```
 
 **2. No. of decisions**
 
+Patient counts per each number of decision points, e.g., 58 patients has 0 decision points.
+
 ```{r}
-event_sum %>% select(n_decision) %>% summary()
+#event_sum %>% select(n_decision) %>% summary()
+table(event_sum$n_decision)
 ```
 
 ```{r message=F, fig.cap='Number of decision points per patient'}
-event_sum %>% ggplot(aes(x = n_decision)) + geom_histogram() + scale_x_continuous('Number of decision points', breaks = seq(0, 17)) + ylab('Number of patients') + ggtitle('Number of decision points per patient')
+event_sum %>% ggplot(aes(x = n_decision)) + geom_histogram() + scale_x_continuous('Number of decision points', breaks = seq(0, 17))  + scale_y_continuous('Number of patients', breaks = seq(0, 150, by = 30)) + ggtitle('Number of decision points per patient')
 ```
 
 ## Duration between decision points
