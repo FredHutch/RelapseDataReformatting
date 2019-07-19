@@ -1,0 +1,258 @@
+---
+title: "AML Outcome Summary"
+output: bookdown::html_document2
+        github_document
+always_allow_html: yes
+---
+
+```{r echo=F, message=F, warning=F}
+library(knitr)
+opts_chunk$set(tidy = TRUE, cache = FALSE, messages = FALSE, warning = FALSE, error = FALSE, echo = F)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(survival)
+library(cowplot)
+library(tidyr)
+library(kableExtra)
+library(stringr)
+theme_set(theme_bw())
+
+library(DT)
+
+show_code = FALSE
+knitr.kable.NA = ''
+```
+
+
+```{r load_data, echo=show_code}
+response = read.csv('data/response_or_relapse.csv')
+#response = read.csv('data/AdamResponse.csv')
+treatment = read.csv('data/treatment_data.csv')
+# vital = read.csv('data/Adam_Vital_Simple.csv')
+# GVHD = read.csv('data/Adam_GVHD_Simple.csv')
+# EM = read.csv('data/EM.csv')
+# baseline = read.csv('data/Patient_Baseline_Data.csv')
+```
+
+```{r}
+death = response %>%
+  filter(!is.na(e_status)) %>%
+  mutate(e_status = 
+           case_when(e_status == 1 ~ 'Dead',
+                     e_status == 2 ~ 'Alive'),
+         redcap_repeat_instrument = e_status) %>%
+  select(subject_id, redcap_repeat_instrument, e_status, date_status) %>%
+  rename(event_type = e_status,
+         event_date=date_status)
+
+treatment_sub = treatment %>%
+  mutate(tx_cat = names(treatment[,5:18])[max.col(treatment[,5:18])]) %>%
+  filter(redcap_repeat_instrument!='') %>%
+  mutate(maintenance_consolidation = ifelse(rx_indication %in% c(2,3,6,7,8), 1, 0)) %>%
+  select(subject_id, redcap_repeat_instrument, tx_cat, maintenance_consolidation, date_treatment) %>%
+  rename(event_type = tx_cat, 
+         event_date=date_treatment)
+
+response_sub = response %>%
+  filter(redcap_repeat_instrument!='') %>%
+  # e_response: 1: relapse or 2: CR
+  select(subject_id, redcap_repeat_instrument, date_response, e_response) %>%
+  mutate(e_response = case_when(e_response == 1 ~ 'Relapse',
+                                e_response == 2 ~ 'CR')) %>%
+  rename(event_type = e_response, 
+         event_date=date_response) 
+
+event_data = response_sub %>%
+  bind_rows(treatment_sub) %>%
+  bind_rows(death) %>%
+  arrange(subject_id, event_date) %>%
+  # calculate decision point 
+  mutate(
+    event_date = as_date(event_date),
+    relapse_point = ifelse(str_detect(event_type, 'Relapse'), 1, 0),
+    treatment_point = ifelse(str_detect(event_type, 'treatment'), 1, 0),
+    decision_point = ifelse(str_detect(event_type, 'treatment') & maintenance_consolidation != 1, 1, 0)) 
+  
+```
+
+# Definition
+
+- **Consolidation or maintenance**: 1 when rx_indication in [2,3,6,7,8], 0 otherwise.
+- **decision points**: if it is a treatment, but not a consolidation or maintenance treatment.
+- **Days between decision points**: days between two adjcent decision points
+- **Days between decision point and relapse**: days between the relapse and the last decision points, e.g., date at relapse - date at last decision point
+
+# Understand patient population
+## Total patient 
+
+```{r}
+event_data %>% summarise(`No. of unique patient` = n_distinct(subject_id))
+```
+
+## Alive or Dead
+
+```{r}
+event_sum = event_data %>%
+  group_by(subject_id) %>%
+  summarise(is_dead = ifelse('Dead' %in% redcap_repeat_instrument, 'Dead', 'Alive'),
+            is_treatment = ifelse('treatment_event' %in% redcap_repeat_instrument, 'Has treatment', 'No treatment'),
+            n_treatment = sum(redcap_repeat_instrument == 'treatment_event'),
+            is_CR = ifelse('CR' %in% event_type, 'Complete Remission (CR)', 'No CR'),
+            n_CR = sum(event_type == 'CR'),
+            is_relapse = ifelse('Relapse' %in% event_type, 'Has Relapse', 'No Relapse'),
+            n_relapse = sum(event_type == 'Relapse'),
+            n_decision = sum(decision_point))
+
+event_sum %>% 
+  select(is_dead) %>%
+  table() 
+
+```
+
+## How many patients never get treatments?
+
+We have 287 patients have treatment history and has relapse. 
+
+```{r}
+event_sum %>% select(is_treatment, is_relapse) %>% table()
+```
+
+```{r}
+event_sum %>% select(is_treatment, is_CR) %>% table()
+```
+
+## Number of treatments OR decision points patients received
+
+**1. No. of treatments**
+
+```{r}
+event_sum %>% select(n_treatment) %>% summary()
+```
+
+```{r message=F, fig.cap='Number of treatments'}
+event_sum %>% ggplot(aes(x = n_treatment, fill = is_treatment)) + geom_histogram() + scale_fill_discrete('') + theme(legend.position = 'bottom') + scale_x_continuous('Number of treatments', breaks = seq(0, 17)) + ylab('Number of patients')
+```
+
+**2. No. of decisions**
+
+```{r}
+event_sum %>% select(n_decision) %>% summary()
+```
+
+```{r message=F, fig.cap='Number of decision points per patient'}
+event_sum %>% ggplot(aes(x = n_decision)) + geom_histogram() + scale_x_continuous('Number of decision points', breaks = seq(0, 17)) + ylab('Number of patients') + ggtitle('Number of decision points per patient')
+```
+
+## Duration between decision points
+
+
+```{r message=F, fig.cap='Days between adjcent decison points'}
+death_sub = death %>% rename(vital_status = redcap_repeat_instrument, death_date = event_date) %>% select(-event_type)
+  
+decision_duration = event_data %>% 
+  left_join(death_sub, by = 'subject_id') %>%
+  subset(decision_point == 1) %>%
+  group_by(subject_id, vital_status) %>%
+  mutate(decision_rank = rank(event_date),
+         decision_duration = as.numeric(event_date - lag(event_date))) %>%
+  ungroup()
+
+decision_duration %>%
+  ggplot(aes(x = decision_duration, fill = vital_status)) + geom_histogram() + scale_x_log10('Days between adjcent decison points', breaks = c(1, 10, 30, 60, 90, 120, 180, 365)) + ylab('Number of events') + ggtitle('Days between adjcent decison points ', subtitle = 'Note: one person can have multiple events (i.e., decision points) ') + theme(legend.position = 'bottom') + scale_fill_manual('', breaks = c('Alive', 'Dead'), values = c('grey', 'grey36'))
+
+```
+
+There are 18 patients have at least two decision points within 10 days. Table below shows the list of these patients. Should we consider them as two decision points if they are only few days apart?  
+
+```{r}
+temp = decision_duration %>% subset(decision_duration < 10 & decision_duration > 0) %>% select(subject_id, event_date, decision_duration)
+event_data %>% select(subject_id, redcap_repeat_instrument, event_date, event_type, decision_point) %>% subset(subject_id %in% temp$subject_id) %>% left_join(temp, by = c('subject_id', 'event_date')) %>% arrange(subject_id, event_date, decision_duration) %>% datatable(filter = 'top')
+```
+
+
+## Duration between decision points and relapse
+
+```{r message=F,fig.cap='Days between relapse and the last decision point'}
+
+has_treatment = event_sum %>% select(subject_id, is_treatment) %>% mutate(is_treatment = ifelse(is_treatment == 'Has treatment', 1, 0))
+
+# decision rank
+event_date = decision_duration %>% filter(decision_rank == 1) %>% select(subject_id, event_date) %>% rename(first_treatment = event_date)
+
+# calculate days since last decision point (treatment)
+# https://stackoverflow.com/questions/26553638/calculate-elapsed-time-since-last-event
+# relapse_dura_since_last_decision = event_data %>%
+#   left_join(event_date, by = 'subject_id') %>%
+#   left_join(death_sub, by = 'subject_id') %>%
+#   mutate(post_treatment = ifelse(event_date >= first_treatment, 1, 0)) %>%
+#   #subset(decision_point == 1 | relapse_point == 1) %>%
+#   group_by(subject_id) %>%
+#   ## diff(event) is wrong!  2146388
+#   mutate(tmp_a = c(0, diff(event_date)) * !decision_point,
+#          # tmp_b: days since last treatment
+#          days_since_last_decision_point = tmp_a * post_treatment,   # *after_treatment
+#          days_since_initial_decision_point = cumsum(days_since_last_decision_point) * (1 - decision_point)) %>%
+#   select(-tmp_a) %>%
+#   subset(decision_point == 1 | relapse_point == 1) 
+
+relapse_dura_since_last_decision = event_data %>%
+  left_join(event_date, by = 'subject_id') %>%
+  left_join(death_sub, by = 'subject_id') %>%
+  mutate(post_treatment = ifelse(event_date >= first_treatment, 1, 0)) %>%
+  subset(event_date >= first_treatment) %>%
+  mutate(tmpG = cumsum(c(FALSE, as.logical(diff(decision_point))))) %>%
+  group_by(subject_id) %>%
+  mutate(tmp_a = c(0, diff(event_date)) * !decision_point,
+         tmp_b = c(diff(event_date), 0) * !decision_point) %>%
+  group_by(tmpG, decision_point, redcap_repeat_instrument) %>%
+  mutate(days_since_last_decision_point = cumsum(as.numeric(tmp_a)),
+         days_since_initial_decision_point = cumsum(days_since_last_decision_point) * (1 - decision_point)) %>%
+  ungroup() %>%
+  select(-c(tmp_a, tmp_b, tmpG))%>%
+  subset(decision_point == 1 | relapse_point == 1) 
+
+# relapse_dura_since_last_decision %>% subset(subject_id == '2236847') %>% select(subject_id, event_date, event_type, days_since_last_decision_point) %>% arrange(event_date)
+
+relapse_dura_since_last_decision %>% ggplot(aes(x = days_since_last_decision_point)) + geom_histogram(fill = 'grey') + facet_grid(vital_status~.) + scale_x_log10('Days since last decison point', breaks = c(1, 10, 30, 60, 90, 120, 180, 365)) + ylab('Number of events') + geom_vline(xintercept = c(30, 60, 90), col = 'red', lty = 'dashed') + ggtitle('Days between relapse and the last decision point', subtitle = 'red dashed lines indicates 1 mon (30 d), 2 mon (60d) and 3 mon (90d)')
+```
+
+```{r message=FALSE}
+relapse_dura_since_last_decision_sum = 
+  relapse_dura_since_last_decision %>%
+  ungroup() %>%
+  filter(post_treatment == 1,
+         !is.na(days_since_last_decision_point) & 
+           event_type == 'Relapse') %>%
+  group_by(subject_id, vital_status) %>%
+  summarise(max_days = max(days_since_last_decision_point, na.rm = T),
+            med_days = median(days_since_last_decision_point, na.rm = T))
+```
+
+
+```{r eval=T, message=FALSE, fig.cap='Average days between relapse and the last decision point'}
+
+g1 = relapse_dura_since_last_decision_sum %>% ggplot(aes(med_days, shape = vital_status)) + geom_histogram(fill = 'grey') + scale_x_log10('Average days per patient since last decison point', breaks = c(1, 10, 30, 60, 90, 120, 180, 365)) + ylab('Number of patients') + geom_vline(xintercept = c(30, 60, 90), col = 'red', lty = 'dashed') + ggtitle('Average days between relapse and the last decision point', subtitle = 'Note: red dashed lines indicates 1 mon (30 d), 2 mon (60d) and 3 mon (90d)')
+
+g2 = relapse_dura_since_last_decision_sum %>% ggplot(aes(max_days)) + geom_histogram(fill = 'grey') + scale_x_log10('Maximun days per patient since last decison point', breaks = c(1, 10, 30, 60, 90, 120, 180, 365)) + ylab('Number of patients') + geom_vline(xintercept = c(30, 60, 90), col = 'red', lty = 'dashed') + ggtitle('Max days between relapse and the last decision point', subtitle = 'Note: red dashed lines indicates 1 mon (30 d), 2 mon (60d) and 3 mon (90d)')
+
+cowplot::plot_grid(g1, g2, ncol = 1) 
+```
+
+# Data snippets
+
+## Event data
+
+```{r}
+event_data %>% select(-relapse_point, -treatment_point) %>% subset(subject_id == '2236847') %>% arrange(event_date) %>% datatable(filter = 'top') 
+```
+
+## Duration between decision points and following relapse
+
+```{r}
+relapse_dura_since_last_decision %>% select(-relapse_point, -treatment_point, -decision_point, -post_treatment, -death_date, -vital_status, -maintenance_consolidation) %>% subset(subject_id == '2236847') %>% arrange(event_date) %>% datatable(filter = 'top') 
+```
+
+
+
+
