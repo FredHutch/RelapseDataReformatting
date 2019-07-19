@@ -1,4 +1,4 @@
-from classes.encounter import Encounter
+from classes.event.encounter import Encounter
 
 class RelapseEncounter(Encounter):
     def __init__(self, df_row):
@@ -10,6 +10,8 @@ class RelapseEncounter(Encounter):
         self.event_type = df_row['e_response']
         self.days_since_relapse = days_since_relapse
         self.days_since_hct = days_since_epoch
+
+
 
 
 

@@ -1,5 +1,4 @@
-from operator import attrgetter
-from classes.encounter import Encounter
+from classes.event.encounter import Encounter
 
 class GVHDEncounter(Encounter):
 
