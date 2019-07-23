@@ -29,7 +29,7 @@ knitr.kable.NA = ''
 response = read.csv('data/response_or_relapse.csv')
 #response = read.csv('data/AdamResponse.csv')
 treatment = read.csv('data/treatment_data.csv')
-# vital = read.csv('data/Adam_Vital_Simple.csv')
+# vital = read.csv('data/Adam_Vital_Simple.csv')   # death or alive (w/date)
 # GVHD = read.csv('data/Adam_GVHD_Simple.csv')
 # EM = read.csv('data/EM.csv')
 # baseline = read.csv('data/Patient_Baseline_Data.csv')
@@ -47,10 +47,13 @@ death = response %>%
          event_date=date_status)
 
 treatment_sub = treatment %>%
-  mutate(tx_cat = names(treatment[,5:18])[max.col(treatment[,5:18])]) %>%
+  mutate(n_tx = select(., e_treatment___1:e_treatment___14) %>% apply(1, sum, na.rm=TRUE),
+         event_type = redcap_repeat_instrument,
+         # tx_cat should be pasting all treatment events! 
+         tx_cat = names(treatment[,c(5, 6, 9:16, 18)])[max.col(treatment[,c(5, 6, 9:16, 18)])]) %>%
   filter(redcap_repeat_instrument!='') %>%
-  mutate(maintenance_consolidation = ifelse(rx_indication %in% c(3,4,6,7,8), 1, 0)) %>%
-  select(subject_id, redcap_repeat_instrument, tx_cat, maintenance_consolidation, date_treatment) %>%
+  mutate(maintenance_consolidation = ifelse(rx_indication %in% c(3,4,8), 1, 0)) %>%
+  select(subject_id, redcap_repeat_instrument, n_tx, tx_cat, maintenance_consolidation, date_treatment) %>%
   rename(event_type = tx_cat, 
          event_date=date_treatment)
 
@@ -71,17 +74,17 @@ event_data = response_sub %>%
   mutate(
     event_date = as_date(event_date),
     relapse_point = ifelse(str_detect(event_type, 'Relapse'), 1, 0),
-    treatment_point = ifelse(str_detect(event_type, 'treatment'), 1, 0),
     decision_point = ifelse(str_detect(event_type, 'treatment') & maintenance_consolidation != 1, 1, 0)) 
-  
 ```
 
 # Definition
 
 - **Consolidation or maintenance**: 
-  - 1 : when rx_indication in [3 (Consolidation of CR),4(Maintenance of CR),6(Induction f/b "consolidation" (no restaging between)),7(Induction f/b "maintenance" (no restaging between)),8 (Consolidation f/b "maintenance" (no restaging between))];
-  - 0 otherwise.
-- **decision points**: if it is a treatment, but not a consolidation or maintenance treatment.
+
+    - 1 : when rx_indication in [3 (Consolidation of CR), 4(Maintenance of CR), 8 (Consolidation f/b "maintenance" (no restaging between))];
+    - 0 otherwise.
+
+- **decision points**: if it is a treatment, but not a Hydroxyurea (e_treatment___3), Intrathecal therapy (e_treatment___4), Palliative chemotherapy (not Hydroxyurea) (e_treatment___13)
 - **Days between decision points**: days between two adjcent decision points
 - **Days between decision point and relapse**: days between the relapse and the last decision points, e.g., date at relapse - date at last decision point
 
@@ -99,12 +102,12 @@ event_sum = event_data %>%
   group_by(subject_id) %>%
   summarise(is_dead = ifelse('Dead' %in% redcap_repeat_instrument, 'Dead', 'Alive'),
             is_treatment = ifelse('treatment_event' %in% redcap_repeat_instrument, 'Has treatment', 'No treatment'),
-            n_treatment = sum(redcap_repeat_instrument == 'treatment_event'),
+            n_treatment = sum(n_tx, na.rm = T),
             is_CR = ifelse('CR' %in% event_type, 'Complete Remission (CR)', 'No CR'),
             n_CR = sum(event_type == 'CR'),
             is_relapse = ifelse('Relapse' %in% event_type, 'Has Relapse', 'No Relapse'),
             n_relapse = sum(event_type == 'Relapse'),
-            n_decision = sum(decision_point))
+            n_decision = sum(decision_point, na.rm = T))
 
 event_sum %>% 
   select(is_dead) %>%
@@ -126,9 +129,18 @@ event_sum %>% select(is_treatment, is_CR) %>% table()
 
 ## Number of treatments OR decision points patients received
 
-**1. No. of treatments**
+**1. No. of total treatments**
 
-Patient counts per each number of treatment, e.g., 56 patients has 0 treatments.
+This section shows the number of total treatments one patient could receive.
+Note: patient counts per each number of treatment, e.g., 56 patients has 0 treatments.
+
+
+```{r message=FALSE, eval=FALSE}
+#Table 1. Number of a treatment a person received in one day
+event_data %>% group_by(subject_id) %>% summarise(n_tx = ifelse(all(is.na(n_tx)), 0, max(n_tx, na.rm = T))) %>% select(n_tx) %>% table()
+```
+
+Table. Total number of treatment a patient received thrughout his/her records. 
 
 ```{r}
 #event_sum %>% select(n_treatment) %>% summary()
@@ -136,7 +148,7 @@ table(event_sum$n_treatment)
 ```
 
 ```{r message=F, fig.cap='Number of treatments'}
-event_sum %>% ggplot(aes(x = n_treatment, fill = is_treatment)) + geom_histogram() + scale_fill_discrete('') + theme(legend.position = 'bottom') + scale_x_continuous('Number of treatments', breaks = seq(0, 17)) + scale_y_continuous('Number of patients', breaks = seq(0, 150, by = 30))
+event_sum %>% ggplot(aes(x = n_treatment, fill = is_treatment)) + geom_histogram() + scale_fill_discrete('') + theme(legend.position = 'bottom') + scale_x_continuous('Number of treatments', breaks = seq(0, 22)) + scale_y_continuous('Number of patients', breaks = seq(0, 150, by = 30))
 ```
 
 **2. No. of decisions**
@@ -167,7 +179,7 @@ decision_duration = event_data %>%
   ungroup()
 
 decision_duration %>%
-  ggplot(aes(x = decision_duration, fill = vital_status)) + geom_histogram() + scale_x_log10('Days between adjcent decison points', breaks = c(1, 10, 30, 60, 90, 120, 180, 365)) + ylab('Number of events') + ggtitle('Days between adjcent decison points ', subtitle = 'Note: one person can have multiple events (i.e., decision points) ') + theme(legend.position = 'bottom') + scale_fill_manual('', breaks = c('Alive', 'Dead'), values = c('grey', 'grey36'))
+  ggplot(aes(x = decision_duration, fill = vital_status)) + geom_histogram() + scale_x_log10('Days between adjcent decison points', breaks = c(1, 10, 30, 60, 90, 120, 180, 365)) + ylab('Number of events') + ggtitle('Days between adjcent decison points ', subtitle = 'Note: one person can have multiple events (i.e., decision points) ') + theme(legend.position = 'bottom') + scale_fill_manual('', breaks = c('Alive', 'Dead'), values = c('grey', 'grey36')) 
 
 ```
 
@@ -252,13 +264,13 @@ cowplot::plot_grid(g1, g2, ncol = 1)
 ## Event data
 
 ```{r}
-event_data %>% select(-relapse_point, -treatment_point) %>% subset(subject_id == '2236847') %>% arrange(event_date) %>% datatable(filter = 'top') 
+event_data %>% select(-relapse_point) %>% subset(subject_id == '2236847') %>% arrange(event_date) %>% datatable(filter = 'top') 
 ```
 
 ## Duration between decision points and following relapse
 
 ```{r}
-relapse_dura_since_last_decision %>% select(-relapse_point, -treatment_point, -decision_point, -post_treatment, -death_date, -vital_status, -maintenance_consolidation) %>% subset(subject_id == '2236847') %>% arrange(event_date) %>% datatable(filter = 'top') 
+relapse_dura_since_last_decision %>% select(-relapse_point, -decision_point, -post_treatment, -death_date, -vital_status, -maintenance_consolidation) %>% subset(subject_id == '2236847') %>% arrange(event_date) %>% datatable(filter = 'top') 
 ```
 
 
