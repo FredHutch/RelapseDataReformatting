@@ -43,9 +43,16 @@ class EventDay():
 
         self.events.append(event)
 
+    def is_decision_point(self):
+        return any(e.is_decision_point() for e in self.events)
+
     @property
     def codes(self):
         return sorted(list(itertools.chain(*[e.codes for e in self.events])))
+
+    @property
+    def treatments(self):
+        return sorted(list(itertools.chain(*[e.treatments for e in self.events])))
 
 
 
