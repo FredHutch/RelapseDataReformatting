@@ -1,7 +1,7 @@
 from classes.event.encounter import Encounter, EncounterFactory
 
 class DemographicsEncounter(Encounter):
-    def __init__(self, date, patientid, days_since_epoch, days_since_relapse, **kwargs):
+    def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
         super(DemographicsEncounter, self).__init__(patientid, date, "DemographicsEncounter")
         self.days_since_epoch = days_since_epoch
         self.days_since_relapse = days_since_relapse
@@ -15,7 +15,7 @@ class DemographicsEncounter(Encounter):
         return False
 
     @property
-    def codes(self):
+    def features(self):
         return list()
 
     @property

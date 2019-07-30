@@ -1,14 +1,14 @@
 from classes.event.encounter import Encounter, EncounterFactory
 
 class GVHDEncounter(Encounter):
-    def __init__(self, date, patientid, days_since_epoch, days_since_relapse, **kwargs):
+    def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
         super(GVHDEncounter, self).__init__(patientid, date, "GVHDEncounter")
         self.days_since_epoch = days_since_epoch
         self.days_since_relapse = days_since_relapse
 
-        self.gvhd_type = kwargs['gvhd_type']
-        self.acute_gvhd_grade = kwargs['acute_gvhd_grade']
-        self.chronic_gvhd_severity = kwargs['chronic_gvhd_severity']
+        self.gvhd_type = kwargs.get('gvhd_type', None)
+        self.acute_gvhd_grade = kwargs.get('acute_gvhd_grade', None)
+        self.chronic_gvhd_severity = kwargs.get('chronic_gvhd_severity', None)
 
     def is_decision_point(self):
         """
