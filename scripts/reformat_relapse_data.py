@@ -4,6 +4,7 @@ import logging
 import os
 import pandas
 from classes import map_instrument_df_to_class
+from classes.collection.eventday import EventDay
 
 from redcap import Project, RedcapError
 
@@ -41,10 +42,13 @@ def pull_from_red_cap(config):
             continue
 
         events = map_instrument_df_to_class(form_df[form])
+
         for event in events:
             if event.date not in timelines[event.patientid].keys():
                 timelines[event.patientid][event.date] = EventDay(event.patientid, event.date)
-            .append(event)
+            else:
+                timelines[event.patientid][event.date].add_event(event)
+
 
 
 

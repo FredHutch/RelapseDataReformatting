@@ -1,14 +1,57 @@
-from classes.event.encounter import Encounter
+from classes.event.encounter import Encounter, EncounterFactory
 
 
 class VitalsEncounter(Encounter):
-    def __init__(self, df_row):
-        date = df_row['date_treatment']
-        patientid = df_row['subject_id']
-        days_since_epoch = df_row['days_hct1_to_status']
-        days_since_relapse = df_row['days_index_rel_to_status']
+    def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
         super(VitalsEncounter, self).__init__(patientid, date, "VitalsEncounter")
+        self.days_since_epoch = days_since_epoch
+        self.days_since_relapse = days_since_relapse
+
+        self.death_status = kwargs.get('death_status', None)
+        self.status_at_death = kwargs.get('status_at_death', None)
+        self.status_last_alive = kwargs.get('status_last_alive', None)
+
+    def is_decision_point(self):
+        return False
+
+    def died(self):
+        """
+        Did the patient die as of this Vitals Encoutner date?
+        :return: True if Dead
+                 False otherwise
+        >>> encounter = VitalsEncounter(patientid=123, date="7-11-2019", days_since_epoch=3, days_since_relapse=2, death_status=2)
+        >>> encounter.died()
+        False
+        >>> encounter.death_status = None
+        >>> encounter.died()
+        False
+        >>> encounter.death_status = 1
+        >>> encounter.died()
+        True
+        """
+        return self.death_status == 1
 
     @property
-    def codes(self):
-        raise NotImplementedError("{c} has not implemented get_codes yet!".format(type(self).__name__))
+    def features(self):
+        return list()
+
+    @property
+    def treatments(self):
+        return list()
+
+
+class VitalsEncounterFactory(EncounterFactory):
+    def __init__(self):
+        super(VitalsEncounterFactory, self).__init__(VitalsEncounter)
+
+    def translate_df_to_dict(self, df_row):
+        row_dictionary = dict()
+        row_dictionary['date'] = df_row['date_status']
+        row_dictionary['patientid'] = df_row['subject_id']
+        row_dictionary['days_since_epoch'] = df_row['days_hct1_to_status']
+        row_dictionary['days_since_relapse'] = df_row['days_index_rel_to_status']
+        row_dictionary['death_status'] = df_row['e_status']
+        row_dictionary['status_at_death'] = df_row['w_status_dead']
+        row_dictionary['status_last_alive'] = df_row['w_status_alive']
+
+        return row_dictionary
