@@ -85,10 +85,8 @@ class EventDay():
 
     def mrd_relapse(self):
         """
-        Add a new Event to the collection of events for the EventDay's given date and patient
-
-        Fails if either the event date or event patientid do not match the Event_Days
-        :param event: Any Encounter object
+        Returns True if any encounter on this EventDay is an MRD Relapse
+        Returns False otherwise
         :return:
         >>> from datetime import datetime
         >>> from classes.event.encounter import Encounter
@@ -114,10 +112,45 @@ class EventDay():
 
     @property
     def features(self):
+        """
+        Get the list of relevant features for the event day
+
+        :return:
+        >>> from datetime import datetime
+        >>> from classes.event.treatmentencounter import TreatmentEncounter
+        >>> from classes.event.relapseencounter import RelapseEncounter
+        >>> pid = 12345
+        >>> dt = datetime.now()
+        >>> ed = EventDay(pid, dt)
+        >>> e1 = TreatmentEncounter(date=dt, patientid=pid, days_since_epoch=3, days_since_relapse=2)
+        >>> ed.add_event(e1)
+        >>> e2 = RelapseEncounter(pid, dt, 3, 2, relapse_or_response=1, relapse_presentation=1)
+        >>> ed.add_event(e2)
+        >>> ed.features
+        []
+        """
         return sorted(list(itertools.chain(*[e.features for e in self.events])))
 
     @property
     def treatments(self):
+        """
+        Get the list of relevant treatments for the event day
+
+        :return:
+        >>> from datetime import datetime
+        >>> from classes.event.treatmentencounter import TreatmentEncounter
+        >>> from classes.event.relapseencounter import RelapseEncounter
+        >>> pid = 12345
+        >>> dt = datetime.now()
+        >>> ed = EventDay(pid, dt)
+        >>> e1 = TreatmentEncounter(date=dt, patientid=pid, days_since_epoch=3, days_since_relapse=2)
+        >>> e1.treatment_dict['hydroxyurea'] = 1
+        >>> ed.add_event(e1)
+        >>> e2 = RelapseEncounter(pid, dt, 3, 1, relapse_or_response=1, relapse_presentation=1)
+        >>> ed.add_event(e2)
+        >>> ed.treatments
+        ['hydroxyurea']
+        """
         return sorted(list(itertools.chain(*[e.treatments for e in self.events])))
 
 

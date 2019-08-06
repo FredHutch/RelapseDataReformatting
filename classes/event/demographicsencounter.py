@@ -14,14 +14,6 @@ class DemographicsEncounter(Encounter):
         """
         return False
 
-    @property
-    def features(self):
-        return list()
-
-    @property
-    def treatments(self):
-        return list()
-
 
 class DemographicsEncounterFactory(EncounterFactory):
     def __init__(self):

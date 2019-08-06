@@ -3,7 +3,8 @@ from setuptools import setup
 setup(
     name='RelapseDataReformatting',
     version='0.1',
-    packages=['pycap',
+    packages=['nose',
+              'pycap',
               'pandas',
               'pandas-profiling'],
     url='https://github.com/FredHutch/RelapseDataReformatting',
