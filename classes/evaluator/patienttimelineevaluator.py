@@ -83,11 +83,6 @@ class PatientTimelineEvaluator:
             else:
                 consolidated_dpts.append(pt)
 
-        # we have smooshed the decision points; check if further consolidation is possible.
-        # TODO: I don't think that we have to recurse using this strategy. write doctest to verify.
-        if not consolidated_dpts == decisionpts:
-            return self.consolidate_decision_pts(timeline, consolidated_dpts)
-
         return consolidated_dpts
 
     def is_decision_point(self, day: EventDay):
