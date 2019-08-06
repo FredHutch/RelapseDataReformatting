@@ -24,38 +24,44 @@ class TestPatientTimelineEvaluator:
         self.INDEX_EPOCH = 1
         self.INDEX_RELAPSE = 2
 
-        e1 = DemographicsEncounter(self.PID, self.EVENT_DATE_ONE, self.INDEX_EPOCH, self.INDEX_RELAPSE, hydroxyurea=1,
-                                consolidation_chemo=1)
-        e2 = TreatmentEncounter(self.PID, self.EVENT_DATE_ONE, self.INDEX_EPOCH,
-                                self.INDEX_RELAPSE, hydroxyurea=1,
-                                consolidation_chemo=1)
-        e3 = TreatmentEncounter(self.PID, self.EVENT_DATE_ONE + timedelta(days=2), self.INDEX_EPOCH + 2,
-                                self.INDEX_RELAPSE + 2, hydroxyurea=1, cytokine=1,
-                                consolidation_chemo=1)
-        e4 = RelapseEncounter(self.PID, self.EVENT_DATE_ONE + timedelta(days=3), self.INDEX_EPOCH + 3,
-                                self.INDEX_RELAPSE + 3, relapse_or_response=1, relapse_presentation=1)
-        e5 = RelapseEncounter(self.PID, self.EVENT_DATE_ONE + timedelta(days=4), self.INDEX_EPOCH + 4,
-                              self.INDEX_RELAPSE + 4, relapse_or_response=1,
-                              relapse_presentation=1)
-        e6 = TreatmentEncounter(self.PID, self.EVENT_DATE_ONE + timedelta(days=5), self.INDEX_EPOCH + 5,
-                                self.INDEX_RELAPSE + 5, cytokine=1)
-        e7 = RelapseEncounter(self.PID, self.EVENT_DATE_ONE + timedelta(days=5), self.INDEX_EPOCH + 5,
-                              self.INDEX_RELAPSE + 5, relapse_or_response=1,
-                              relapse_presentation=3)
-        e8 = TreatmentEncounter(self.PID, self.EVENT_DATE_ONE + timedelta(days=6), self.INDEX_EPOCH + 6,
-                                self.INDEX_RELAPSE + 6, cytokine=1)
-        e9 = VitalsEncounter(self.PID, self.EVENT_DATE_ONE + timedelta(days=106), self.INDEX_EPOCH + 106,
-                                self.INDEX_RELAPSE + 106, )
-
-
+        e1 = self._make_encounter_with_timeshift(DemographicsEncounter, self.PID, self.EVENT_DATE_ONE,
+                                                            self.INDEX_EPOCH,
+                                                            self.INDEX_RELAPSE, hydroxyurea=1, consolidation_chemo=1)
+        e2 = self._make_encounter_with_timeshift(TreatmentEncounter, self.PID, self.EVENT_DATE_ONE,
+                                                            self.INDEX_EPOCH,
+                                                            self.INDEX_RELAPSE, hydroxyurea=1, consolidation_chemo=1)
+        e3 = self._make_encounter_with_timeshift(TreatmentEncounter, self.PID, self.EVENT_DATE_ONE,
+                                                            self.INDEX_EPOCH,
+                                                            self.INDEX_RELAPSE, 2, hydroxyurea=1, cytokine=1,
+                                                            consolidation_chemo=1)
+        e4 = self._make_encounter_with_timeshift(RelapseEncounter, self.PID, self.EVENT_DATE_ONE,
+                                                            self.INDEX_EPOCH,
+                                                            self.INDEX_RELAPSE, 3, relapse_or_response=1, relapse_presentation=1)
+        e5 = self._make_encounter_with_timeshift(RelapseEncounter, self.PID, self.EVENT_DATE_ONE,
+                                                            self.INDEX_EPOCH,
+                                                            self.INDEX_RELAPSE, 4, relapse_or_response=1,
+                                                            relapse_presentation=1)
+        e6 = self._make_encounter_with_timeshift(TreatmentEncounter, self.PID, self.EVENT_DATE_ONE,
+                                                            self.INDEX_EPOCH,
+                                                            self.INDEX_RELAPSE,  5, cytokine=1)
+        e7 = self._make_encounter_with_timeshift(RelapseEncounter, self.PID, self.EVENT_DATE_ONE,
+                                                            self.INDEX_EPOCH,
+                                                            self.INDEX_RELAPSE, 6, relapse_or_response=1,
+                                                            relapse_presentation=3)
+        e8 = self._make_encounter_with_timeshift(TreatmentEncounter, self.PID, self.EVENT_DATE_ONE,
+                                                            self.INDEX_EPOCH,
+                                                            self.INDEX_RELAPSE,  6, cytokine=1)
+        e9 = self._make_encounter_with_timeshift(VitalsEncounter, self.PID, self.EVENT_DATE_ONE,
+                                                            self.INDEX_EPOCH,
+                                                            self.INDEX_RELAPSE, 105)
 
         self.ed1 = _make_event_day(self.PID, self.EVENT_DATE_ONE, event_days=[e1, e2])
         self.ed2 = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=2), event_days=[e3])
         self.ed3 = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=3), event_days=[e4])
         self.ed4 = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=4), event_days=[e5])
-        self.ed5 = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=5), event_days=[e6, e7])
-        self.ed6 = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=6), event_days=[e8])
-        self.ed7 = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=106), event_days=[e9])
+        self.ed5 = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=5), event_days=[e6])
+        self.ed6 = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=6), event_days=[e7, e8])
+        self.ed7 = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=105), event_days=[e9])
 
 
         self.evaluator = pte.PatientTimelineEvaluator(self.TIME_WINDOW, self.DPOINT_WINDOW)
@@ -69,13 +75,37 @@ class TestPatientTimelineEvaluator:
         dpt1.label_cause = 'Morphological Relapse'
         dpt1.label = True
         dpt2 = DecisionPoint(eventdays=[self.ed5])
-
+        dpt2.label_cause = 'No Response + New Tx'
         dpt2.label = True
-
+        dpt3 = DecisionPoint(eventdays=[self.ed6])
+        dpt3.label_cause = None
+        dpt3.label = False
 
         actual_dpts = self.evaluator.evaluate(self.timeline)
+        assert_equals(actual_dpts, [dpt1, dpt2, dpt3])
 
-        assert_equals(actual_dpts, [dpt1, dpt2])
+    def test_consolidate_decision_points(self):
+        dpt1 = DecisionPoint(eventdays=[self.ed1])
+        dpt2 = DecisionPoint(eventdays=[self.ed2])
+        dpt3 = DecisionPoint(eventdays=[self.ed5])
+        dpt4 = DecisionPoint(eventdays=[self.ed6])
+
+        merged_dpt1 = DecisionPoint(eventdays=[self.ed1, self.ed2])
+        merged_dpt2 = DecisionPoint(eventdays=[self.ed5])
+        merged_dpt3 = DecisionPoint(eventdays=[self.ed6])
+
+        actual_dpts = self.evaluator.consolidate_decision_pts(self.timeline, [dpt1, dpt2, dpt3, dpt4])
+        assert_equals(actual_dpts, [merged_dpt1, merged_dpt2, merged_dpt3])
+
+    def test_consolidate_decision_points_relapse_breakpoint(self):
+        dpt1 = DecisionPoint(eventdays=[self.ed5])
+        dpt2 = DecisionPoint(eventdays=[self.ed6])
+
+        merged_dpt1 = DecisionPoint(eventdays=[self.ed5])
+        merged_dpt2 = DecisionPoint(eventdays=[self.ed6])
+
+        actual_dpts = self.evaluator.consolidate_decision_pts(self.timeline, [dpt1, dpt2])
+        assert_equals(actual_dpts, [merged_dpt1, merged_dpt2])
 
     def test_assign_labels(self):
         return
@@ -121,10 +151,16 @@ class TestPatientTimelineEvaluator:
         tx_change_enc = self._make_encounter_with_timeshift(TreatmentEncounter, self.PID, self.EVENT_DATE_ONE,
                                                             self.INDEX_EPOCH,
                                                             self.INDEX_RELAPSE, 100, cytokine=1)
+        mrd_relapse_enc = self._make_encounter_with_timeshift(RelapseEncounter, self.PID, self.EVENT_DATE_ONE,
+                                                            self.INDEX_EPOCH,
+                                                            self.INDEX_RELAPSE, 5, relapse_or_response=1,
+                                                            relapse_presentation=3)
+        mrd_relapse_day = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=5), event_days=[mrd_relapse_enc])
         tx_change_day = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=100), event_days=[tx_change_enc])
+        context.add_eventday(mrd_relapse_day)
         context.add_eventday(tx_change_day)
 
-        expected = 'No Response + New Tx'
+        expected = 'MRD Relapse + Tx Change'
         target = self.evaluator.target_eval(dpt1, tx_change_day, context)
         assert_equals(expected, target)
 

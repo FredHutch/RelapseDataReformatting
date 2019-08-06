@@ -38,7 +38,7 @@ class PatientTimelineEvaluator:
             """
             return codes
 
-        def mrd_occurred(self):
+        def mrd_relapse(self):
             return any(ed.mrd_relapse() for ed in self.event_days)
 
 
@@ -77,8 +77,8 @@ class PatientTimelineEvaluator:
 
             # if the current decision point and the previous decision point are within the window for consolidation
             # AND there are no intervening events
-            if (pt.eval_date - consolidated_dpts[-1].eval_date) <= self.decision_point_consolidation_window and len(
-                        timeline.get_events_in_range(consolidated_dpts[-1].eval_date, pt.eval_date)) == 1:
+            if (pt.eval_date - consolidated_dpts[-1].eval_date) <= self.decision_point_consolidation_window and not any(
+                ed.relapse() for ed in timeline.get_events_in_range(consolidated_dpts[-1].eval_date, pt.eval_date)):
                 consolidated_dpts[-1].add_event_day(pt.eventdays)
             else:
                 consolidated_dpts.append(pt)
@@ -124,7 +124,7 @@ class PatientTimelineEvaluator:
         :param day:
         :return:
         """
-        time_window = dpt.eval_date - day.date
+        time_window = day.date - dpt.eval_date
         if time_window <= self.target_timewindow:
             if day.died():
                 return "Death"
@@ -136,7 +136,7 @@ class PatientTimelineEvaluator:
             if context.mrd_relapse() and day.treatments != dpt.treatments:
                 return "MRD Relapse + Tx Change"
 
-        return False
+        return None
 
 
 

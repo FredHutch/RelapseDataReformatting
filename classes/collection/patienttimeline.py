@@ -27,4 +27,4 @@ class PatientTimeline:
         :return: self.event_days with date > param date
         """
         sorted_days = sorted(self.event_days, key=lambda x: x.date)
-        return [ed for ed in sorted_days if ed.date >= beginningdate and ed.date < enddate]
+        return [ed for ed in sorted_days if ed.date > beginningdate and ed.date <= enddate]
