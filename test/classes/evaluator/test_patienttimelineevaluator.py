@@ -121,7 +121,7 @@ class TestPatientTimelineEvaluator:
         tx_change_enc = self._make_encounter_with_timeshift(TreatmentEncounter, self.PID, self.EVENT_DATE_ONE,
                                                             self.INDEX_EPOCH,
                                                             self.INDEX_RELAPSE, 100, cytokine=1)
-        tx_change_day = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=5), event_days=[tx_change_enc])
+        tx_change_day = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=100), event_days=[tx_change_enc])
         context.add_eventday(tx_change_day)
 
         expected = 'No Response + New Tx'
