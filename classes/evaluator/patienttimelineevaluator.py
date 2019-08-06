@@ -38,29 +38,29 @@ class PatientTimelineEvaluator:
             """
             return codes
 
+        def mrd_occurred(self):
+            return any(ed.mrd_relapse() for ed in self.event_days)
 
-    def __init__(self, timewindow, dpoint_eval_window):
+
+    def __init__(self, timewindow: int, dpoint_eval_window: int):
         self.target_timewindow = dt.timedelta(days=timewindow)
         self.mrd_response_timewindow = dt.timedelta(days=365)
-        self.decision_point_consolidation_window = dpoint_eval_window
+        self.decision_point_consolidation_window = dt.timedelta(days=dpoint_eval_window)
         self.context = self.Context()
 
     def evaluate(self, timeline: PatientTimeline):
         ordered_days = timeline.get_sorted_events()
-
-        idx = 0
-        max_idx = len(ordered_days)
         decision_points = []
-        target_idxs = []
-        while idx <= max_idx:
-            day = ordered_days[idx]
+        for day in ordered_days:
             if self.is_decision_point(day):
                 decision_points.append(DecisionPoint(day))
 
-        decision_points = self.consolidate_decision_pts(decision_points)
+        decision_points = self.consolidate_decision_pts(timeline, decision_points)
         self.assign_labels(timeline, decision_points)
 
-    def consolidate_decision_pts(self, decisionpts: List[DecisionPoint]):
+        return decision_points
+
+    def consolidate_decision_pts(self, timeline: PatientTimeline, decisionpts: List[DecisionPoint]):
         """
         Performs consolidation logic on a list of decision points
         -if two decision points are within the consolidation window of each other,
@@ -76,17 +76,17 @@ class PatientTimelineEvaluator:
                 continue
 
             # if the current decision point and the previous decision point are within the window for consolidation
-            if (pt.eval_date - consolidated_dpts[-1].eval_date) <= self.decision_point_consolidation_window:
-                new_dpt = consolidated_dpts.pop()
-                new_dpt.add_event_day(pt)
-                consolidated_dpts.append(new_dpt)
+            # AND there are no intervening events
+            if (pt.eval_date - consolidated_dpts[-1].eval_date) <= self.decision_point_consolidation_window and len(
+                        timeline.get_events_in_range(consolidated_dpts[-1].eval_date, pt.eval_date)) == 1:
+                consolidated_dpts[-1].add_event_day(pt.eventdays)
             else:
                 consolidated_dpts.append(pt)
 
         # we have smooshed the decision points; check if further consolidation is possible.
         # TODO: I don't think that we have to recurse using this strategy. write doctest to verify.
         if not consolidated_dpts == decisionpts:
-            return self.consolidate_decision_pts(consolidated_dpts)
+            return self.consolidate_decision_pts(timeline, consolidated_dpts)
 
         return consolidated_dpts
 
@@ -105,26 +105,27 @@ class PatientTimelineEvaluator:
         :return: decision_points, with labels assigned
         """
         for dpt in decision_points:
+            context = self.Context()
             target_days = timeline.get_events_after_date(dpt.eval_date)
+
             for target_day in target_days:
-                cause = self.target_eval(dpt, target_day)
+                context.add_eventday(target_day)
+                cause = self.target_eval(dpt, target_day, context)
                 if cause is not None:
                     dpt.label_cause = cause
                     dpt.label = True
+                    break
             if dpt.label_cause is None: # no valid positive label rule found
                 dpt.label = False
 
-
-
-
-    def target_eval(self, dpt: DecisionPoint, day: EventDay):
+    def target_eval(self, dpt: DecisionPoint, day: EventDay, context: Context):
         """
         Return a cause IFF occurs within the decision window:
             -the patient Died with the decision window
             -the patient relapsed within the decision window
             -The patient had no response to the treatment AND
         or the following occurs within a year:
-            -the patient relapsed from MRD AND there was a change in Tx within a year
+            -the patient relapsed from MRD within decision window AND there was a change in Tx within a year
         :param day:
         :return:
         """
@@ -137,7 +138,7 @@ class PatientTimelineEvaluator:
             if day.treatments != dpt.treatments:
                 return "No Response + New Tx"
         if time_window <= self.mrd_response_timewindow:
-            if day.mrd_relapse() and day.treatments != dpt.treatments:
+            if context.mrd_relapse() and day.treatments != dpt.treatments:
                 return "MRD Relapse + Tx Change"
 
         return False

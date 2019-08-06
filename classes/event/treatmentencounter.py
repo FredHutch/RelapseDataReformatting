@@ -1,59 +1,42 @@
 from classes.event.encounter import Encounter, EncounterFactory
 
 class TreatmentEncounter(Encounter):
+    INDUCTION = 1
+    MRD_TREATMENT = 2
+    CONSOLIDATION_CR = 3
+    MAINTENANCE_CR = 4
+    OTHER_INDICATION = 9
+
     def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
         super(TreatmentEncounter, self).__init__(patientid, date, "TreatmentEncounter")
         self.days_since_relapse = days_since_relapse
         self.days_since_hct = days_since_epoch
-        self.induction_chemo = None
-        self.consolidation_chemo = None
-        self.hydroxyurea = None
-        self.intrathecal_therapy = None
-        self.radiation = None
-        self.hypomethylating = None
-        self.targeted = None
-        self.checkpoint_inhibitors = None
-        self.cytokine = None
-        self.cli = None
-        self.hct = None
-        self.other_np = None
-        self.palliative_chemo = None
-        self.other_tcell_targeted = None
+        self.rx_indication = kwargs.get('rx_indication', None)
+        self.treatment_dict = dict()
+        self.treatment_dict.setdefault(None)
         self.set_treatments(**kwargs)
 
     def set_treatments(self, **kwargs):
-        self.induction_chemo = kwargs.get('induction_chemo', None)
-        self.consolidation_chemo = kwargs.get('consolidation_chemo', None)
-        self.hydroxyurea = kwargs.get('hydroxyurea', None)
-        self.intrathecal_therapy = kwargs.get('intrathecal_therapy', None)
-        self.radiation = kwargs.get('radiation', None)
-        self.hypomethylating = kwargs.get('hypomethylating', None)
-        self.targeted = kwargs.get('targeted', None)
-        self.checkpoint_inhibitors = kwargs.get('checkpoint_inhibitors', None)
-        self.cytokine = kwargs.get('cytokine', None)
-        self.cli = kwargs.get('cli', None)
-        self.hct = kwargs.get('hct', None)
-        self.other_np = kwargs.get('other_np', None)
-        self.palliative_chemo = kwargs.get('palliative_chemo', None)
-        self.other_tcell_targeted = kwargs.get('other_tcell_targeted', None)
+        if not kwargs:
+            kwargs = dict()
+        self.treatment_dict['induction_chemo'] = kwargs.get('induction_chemo', None)
+        self.treatment_dict['consolidation_chemo'] = kwargs.get('consolidation_chemo', None)
+        self.treatment_dict['hydroxyurea'] = kwargs.get('hydroxyurea', None)
+        self.treatment_dict['intrathecal_therapy'] = kwargs.get('intrathecal_therapy', None)
+        self.treatment_dict['radiation'] = kwargs.get('radiation', None)
+        self.treatment_dict['hypomethylating'] = kwargs.get('hypomethylating', None)
+        self.treatment_dict['targeted'] = kwargs.get('targeted', None)
+        self.treatment_dict['checkpoint_inhibitors'] = kwargs.get('checkpoint_inhibitors', None)
+        self.treatment_dict['cytokine'] = kwargs.get('cytokine', None)
+        self.treatment_dict['cli'] = kwargs.get('cli', None)
+        self.treatment_dict['hct'] = kwargs.get('hct', None)
+        self.treatment_dict['other_np'] = kwargs.get('other_np', None)
+        self.treatment_dict['palliative_chemo'] = kwargs.get('palliative_chemo', None)
+        self.treatment_dict['other_tcell_targeted'] = kwargs.get('other_tcell_targeted', None)
 
     @property
     def treatments(self):
-        return [self.induction_chemo,
-                self.consolidation_chemo,
-                self.hydroxyurea,
-                self.intrathecal_therapy,
-                self.radiation,
-                self.hypomethylating,
-                self.targeted,
-                self.checkpoint_inhibitors,
-                self.cytokine,
-                self.cli,
-                self.hct,
-                self.other_np,
-                self.palliative_chemo,
-                self.other_tcell_targeted,
-                ]
+        return [k for k,v in self.treatment_dict.items() if v == 1]
 
     def has_consolidation_maintenance(self):
         '''
@@ -63,14 +46,15 @@ class TreatmentEncounter(Encounter):
             8 (Consolidation f/b “maintenance” (no restaging between))];
 
             0 Otherwise
+        per Krakow JUL 30: use rx_indication to determine consolidation or maintenance instead
         >>> encounter = TreatmentEncounter(date="7-11-2019", patientid=123, days_since_epoch=3, days_since_relapse=2)
         >>> encounter.has_consolidation_maintenance()
         False
-        >>> encounter.hydroxyurea = 1
+        >>> encounter.treatment_dict['hydroxyurea'] = 1
         >>> encounter.has_consolidation_maintenance()
         True
         '''
-        return any((self.hydroxyurea, self.intrathecal_therapy, self.checkpoint_inhibitors))
+        return any((self.treatment_dict['hydroxyurea'], self.treatment_dict['intrathecal_therapy'], self.treatment_dict['checkpoint_inhibitors']))
 
     def is_decision_point(self):
         '''
@@ -82,27 +66,35 @@ class TreatmentEncounter(Encounter):
             …. Not sure whether we should bother with IT therapy, other palliative chemotherapy….
             Maybe exclude IT therapy, Hydroxyurea and other palliative chemotherapy
             as counting as “treatments” of interest.
+        per Krakow JUL30:
+            an 'Other' rx_indication should not be considered for a decision point
         :return:
         >>> encounter = TreatmentEncounter(date="7-11-2019", patientid=123, days_since_epoch=3, days_since_relapse=2)
         >>> encounter.is_decision_point()
         False
-        >>> encounter.induction_chemo = 0
+        >>> encounter.treatment_dict['induction_chemo'] = 0
         >>> encounter.is_decision_point()
         False
-        >>> encounter.induction_chemo = 1
+        >>> encounter.treatment_dict['induction_chemo'] = 1
+        >>> encounter.rx_indication = TreatmentEncounter.OTHER_INDICATION
+        >>> encounter.is_decision_point()
+        False
+        >>> encounter.treatment_dict['induction_chemo'] = 1
+        >>> encounter.rx_indication = TreatmentEncounter.INDUCTION
         >>> encounter.is_decision_point()
         True
         '''
-        return any((self.induction_chemo,
-                self.consolidation_chemo,
-                self.radiation,
-                self.targeted,
-                self.checkpoint_inhibitors,
-                self.cytokine,
-                self.cli,
-                self.hct,
-                self.other_np,
-                self.other_tcell_targeted))
+        return (any((self.treatment_dict['induction_chemo'],
+                self.treatment_dict['consolidation_chemo'],
+                self.treatment_dict['radiation'],
+                self.treatment_dict['targeted'],
+                self.treatment_dict['checkpoint_inhibitors'],
+                self.treatment_dict['cytokine'],
+                self.treatment_dict['cli'],
+                self.treatment_dict['hct'],
+                self.treatment_dict['other_np'],
+                self.treatment_dict['other_tcell_targeted']))
+               and self.rx_indication != TreatmentEncounter.OTHER_INDICATION)
 
 class TreatmentEncounterFactory(EncounterFactory):
     """
@@ -126,7 +118,6 @@ class TreatmentEncounterFactory(EncounterFactory):
     ... 'e_treatment__10': [0],
     ... 'e_treatment__11': [0],
     ... 'e_treatment__12': [0],
-    ... 'e_treatment__13': [0],
     ... 'e_treatment__14': [None],
     ...  })
     >>> encounter = factory.make_encounters(df)
@@ -138,24 +129,27 @@ class TreatmentEncounterFactory(EncounterFactory):
 
     def translate_df_to_dict(self, df_row):
         row_dictionary = dict()
-        row_dictionary['date'] = df_row['date_treatment']
-        row_dictionary['patientid'] = df_row['subject_id']
-        row_dictionary['days_since_epoch'] = df_row['days_hct1_to_tx']
-        row_dictionary['days_since_relapse'] = df_row['days_index_relapse_to_tx']
-        row_dictionary['induction_chemo'] = df_row['e_treatment__1']
-        row_dictionary['consolidation_chemo'] = df_row['e_treatment__2']
-        row_dictionary['hydroxyurea'] = df_row['e_treatment__3']
-        row_dictionary['intrathecal_therapy'] = df_row['e_treatment__4']
-        row_dictionary['radiation'] = df_row['e_treatment__5']
-        row_dictionary['hypomethylating'] = df_row['e_treatment__6']
-        row_dictionary['targeted'] = df_row['e_treatment__7']
-        row_dictionary['checkpoint_inhibitors'] = df_row['e_treatment__8']
-        row_dictionary['cytokine'] = df_row['e_treatment__9']
-        row_dictionary['cli'] = df_row['e_treatment__10']
-        row_dictionary['hct'] = df_row['e_treatment__11']
-        row_dictionary['other_np'] = df_row['e_treatment__12']
-        row_dictionary['palliative_chemo'] = df_row['e_treatment__13']
-        row_dictionary['other_tcell_targeted'] = df_row['e_treatment__14']
+        row_dictionary['date'] = df_row.get('date_treatment', None)
+        row_dictionary['patientid'] = df_row.get('subject_id', None)
+        row_dictionary['days_since_epoch'] = df_row.get('days_hct1_to_tx', None)
+        row_dictionary['days_since_relapse'] = df_row.get('days_index_relapse_to_tx', None)
+        row_dictionary['rx_indication'] = df_row.get('rx_indication', None)
+
+        #begin treatment types
+        row_dictionary['induction_chemo'] = df_row.get('e_treatment__1', None)
+        row_dictionary['consolidation_chemo'] = df_row.get('e_treatment__2', None)
+        row_dictionary['hydroxyurea'] = df_row.get('e_treatment__3', None)
+        row_dictionary['intrathecal_therapy'] = df_row.get('e_treatment__4', None)
+        row_dictionary['radiation'] = df_row.get('e_treatment__5', None)
+        row_dictionary['hypomethylating'] = df_row.get('e_treatment__6', None)
+        row_dictionary['targeted'] = df_row.get('e_treatment__7', None)
+        row_dictionary['checkpoint_inhibitors'] = df_row.get('e_treatment__8', None)
+        row_dictionary['cytokine'] = df_row.get('e_treatment__9', None)
+        row_dictionary['cli'] = df_row.get('e_treatment__10', None)
+        row_dictionary['hct'] = df_row.get('e_treatment__11', None)
+        row_dictionary['other_np'] = df_row.get('e_treatment__12', None)
+        row_dictionary['palliative_chemo'] = df_row.get('e_treatment__13', None)
+        row_dictionary['other_tcell_targeted'] = df_row.get('e_treatment__14', None)
 
         return row_dictionary
 

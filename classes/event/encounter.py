@@ -45,11 +45,11 @@ class Encounter():
 
     @property
     def features(self):
-        raise NotImplementedError("{c} has not implemented features yet!".format(c=type(self).__name__))
+        return []
 
     @property
     def treatments(self):
-        raise NotImplementedError("{c} has not implemented treatments yet!".format(c=type(self).__name__))
+        return []
 
     def is_decision_point(self):
         """
@@ -58,6 +58,14 @@ class Encounter():
                  False Otherwise
         """
         raise NotImplementedError("{c} has not implemented is_decision_point yet!".format(c=type(self).__name__))
+
+    def is_target(self):
+        """
+        Is this encounter a target candidate?
+        :return: True if encounter is a valid target.
+                 False Otherwise
+        """
+        raise NotImplementedError("{c} has not implemented is_target yet!".format(c=type(self).__name__))
 
 
 class EncounterFactory:
