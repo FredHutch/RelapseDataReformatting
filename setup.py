@@ -10,7 +10,7 @@ setup(
               'classes.event',
               'classes.evaluator',
               'classes.collection'],
-    tests_requires=['nose'],
+    tests_require=['nose'],
     install_requires=['pycap',
                       'pandas',
                       'pandas-profiling'],
