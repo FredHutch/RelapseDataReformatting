@@ -1,4 +1,5 @@
 from classes.event.encounter import Encounter, EncounterFactory
+from pandas import DataFrame
 
 class RelapseEncounter(Encounter):
     RELAPSE = 1
@@ -9,7 +10,7 @@ class RelapseEncounter(Encounter):
     MRD_PRESENTATION = 3
 
     def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
-        super(RelapseEncounter, self).__init__(patientid, date, "RelapseEncounter")
+        super(RelapseEncounter, self).__init__(patientid, date, "RelapseEncounter", **kwargs)
         self.days_since_epoch = days_since_epoch
         self.days_since_relapse = days_since_relapse
 
@@ -72,7 +73,7 @@ class RelapseEncounterFactory(EncounterFactory):
         super(RelapseEncounterFactory, self).__init__(RelapseEncounter)
 
     def translate_df_to_dict(self, df_row):
-        row_dictionary = dict()
+        row_dictionary = self.__store_df_row(df_row)
         row_dictionary['date'] = df_row['date_response']
         row_dictionary['patientid'] = df_row['subject_id']
         row_dictionary['days_since_epoch'] = df_row['days_hct1_to_e']
