@@ -6,17 +6,19 @@ import os
 import csv
 import pickle
 
+# these file paths will be move to a common file eventually
+data_dict_pkl_path = os.path.realpath('data_dict/data_dictionary.pkl')
+data_dict_csv_path = os.path.realpath('data_dict/data_dictionary.csv')
+categorical_feature_path = os.path.realpath('data_dict/categorical_features.csv')
+
 class DataDictionary():
-    def __init__(self, default_datadict=True, default_codes=True):
+    def __init__(self, default_datadict=None, default_codes=None):
         self.code_cols = {}
-        self.one_hot_encoded = {}
         self.numeric_cols = []
         self.drop_cols = []
-        if default_datadict:
-            self.read_data_dict(os.path.realpath('data_dict/data_dictionary.csv'))
         self.code_mappings = {}
-        if default_codes:
-            self.read_code_mapping(os.path.realpath('data_dict/data_dictionary.pkl'))
+        self.read_data_dict(data_dict_csv_path)
+        self.read_code_mapping(data_dict_pkl_path)
 
     def read_data_dict(self, filepath):
         with open(filepath, "r") as fin:
@@ -35,8 +37,7 @@ class DataDictionary():
         self.code_mappings = {v:k for k,v in code_map.items()}
 
 
-
-def map_codes_to_ints(filepath):
+def map_codes_to_ints(datadict = data_dict_csv_path, outpath = data_dict_pkl_path):
     '''
     map one hot encoded features (binary) to integer feature names
     dump it to a pickle file
@@ -46,20 +47,31 @@ def map_codes_to_ints(filepath):
     '''
     code_d = {}
     int_map_count = 1
-    with open(filepath, "r") as fin:
+    with open(datadict, "r") as fin:
         reader = csv.DictReader(fin)
         for row in reader:
             if (row['DataTreatment'] == 'Code'):
                 code_d[int_map_count] = row['Name']
                 int_map_count += 1
-    with open(os.path.realpath('data_dict/data_dictionary.pkl'), 'wb') as code_map:
+    with open(outpath, 'wb') as code_map:
         pickle.dump(code_d, code_map)
 
-def one_hot_encoding(categorical_features):
+def one_hot_encoding(feature, categorical_feature_mapping = categorical_feature_path):
     '''
-    To-do: one-hot encoding features while load in the data
-    :param categorical_features:
-    :return:
+    One-hot encoding, and rename categorical features
+    :feature: dict {name: val}, e.g., {feature: 3}
+    :categorical_feature_mapping: csv file with categorical features
+    :return: new feature name, e.g., feature_3
     '''
-    # load categorical_features.csv
-    # one hot encoding the features
+
+    # create dict for categorical features, {feature: n_total_levels}
+    cat_name = {}
+    with open(categorical_feature_mapping, "r") as fin:
+        reader = csv.DictReader(fin)
+        for row in reader:
+            cat_name[row['Name']] = row['N']
+
+    (name, val), = feature.items()
+
+    if cat_name.get(name):
+        return '{}_{}'.format(name, val)
