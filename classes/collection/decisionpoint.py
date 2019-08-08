@@ -10,6 +10,11 @@ class DecisionPoint:
         self.label = None
         self.label_cause = None
 
+    def __eq__(self, other):
+        if isinstance(other, DecisionPoint):
+            return all([self.eventdays == other.eventdays, self.label == other.label, self.label_cause == other.label_cause])
+        return False
+
     def add_event_day(self, event_day: EventDay):
         if type(event_day) is EventDay:
             self.eventdays.append(event_day)
