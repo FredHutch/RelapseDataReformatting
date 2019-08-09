@@ -68,7 +68,7 @@ class Encounter():
         raise NotImplementedError("{c} has not implemented is_target yet!".format(c=type(self).__name__))
 
 
-class EncounterFactory:
+class EncounterFactory():
     def __init__(self, encountertype):
         self.encounterType = encountertype
 
