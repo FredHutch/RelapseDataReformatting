@@ -11,6 +11,48 @@ data_dict_pkl_path = os.path.realpath('data_dict/data_dictionary.pkl')
 data_dict_csv_path = os.path.realpath('data_dict/data_dictionary.csv')
 categorical_feature_path = os.path.realpath('data_dict/categorical_features.csv')
 
+# Note: cmvx: '-/' Krakow is working on QA this field.
+# Other criteria:
+#   ## Create:
+#             - MaleDonor_Female_Recipient: if sex == 'Male' and donsex == 'Female', then 1; else: 0
+#             - Age vs. treatment count
+#             - Time to first relapse
+#             - % MRD vs. morph
+
+gateway_feature_recode_map = {'cmvx': {'-/-': 'neg_neg', '-/': 'neg_neg', '/': 'Unknown',
+                                       '+/-': 'Others', '+/+': 'Others', '-/+': 'Others',
+                                       '+/': 'Others', '-/+': 'Others'},
+                              'tbidose': {'0': 'le450', '200': 'le450', '300': 'le450', '450': 'le450',
+                                          '1200': 'ge1200', '1320': 'ge1200'},
+                              'proplbl': {
+                                  'FK506': 'CNI',
+                                  'NEORAL': 'CNI',
+                                  'CSP': 'CNI',
+                                  'RAPA': 'RAPA',
+                                  'MMF': 'MMF',
+                                  'CY': 'CY',
+                                  'STEROIDS': '', # ignore STEROIDS
+                                  'MTX': '??', # waiting for confirmation
+                                  '[MYCOPHENOLATESODIUM]': '??' # waiting for confirmation
+                              },
+                              'hla_cco': {'ISO/MATCHED': '??',
+                                          'REL/HAPLOIDENTICAL': 'REL/HAPLOIDENTICAL',
+                                          'REL/MATCHED': 'REL/MATCHED',
+                                          'REL/MISMATCH': 'REL/MISMATCH',
+                                          'REL/UNKNOWN': '??',
+                                          'RD/CORD': 'CORD',
+                                          'URD/CORD-COMBINED': 'CORD',
+                                          'URD/MATCHED': 'URD/MATCHED',
+                                          'URD/MISMATCH': 'URD/MISMATCH'}}
+
+gateway_feature_to_integer = {'cmvx': {'neg_neg': 1, 'Others': 2, 'Unknown': 3},
+                              'proplbl': {'CNI': 1, 'RAPA': 2, 'MMF': 3, 'CY': 4, 'MTX': 5},
+                              'hla_cco': {'REL/MATCHED': 1, 'REL/MISMATCH': 2, 'REL/HAPLOIDENTICAL': 3,
+                                          'RD/CORD': 4, 'URD/MATCHED': 5, 'URD/MISMATCH': 6},
+                              'tbidose': {'le450': 1, 'ge1200': 2},
+                              'celltxl': {'PBSC': 1, 'BM': 2, 'CORD': 3}
+                              }
+
 class DataDictionary():
     def __init__(self, default_datadict=None, default_codes=None):
         self.code_cols = {}
