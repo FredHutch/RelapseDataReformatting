@@ -1,12 +1,21 @@
 import datetime as dt
 import pandas as pd
+from math import isnan
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 class Encounter():
     def __init__(self, patientid, date, encountertype, **kwargs):
         self.date = date
         if type(date) is pd.Timestamp:
             self.date = date.date()
-        elif type(date) is not dt.datetime:
-            self.date = dt.datetime.strptime(date, '%m-%d-%Y')
+        elif type(date) is str:
+            self.date = dt.datetime.strptime(date, '%Y-%m-%d')
+        else:
+            error_str = "Warning! a valid date must be passed to Encounter!: date passed: {}".format(date)
+            raise ValueError(error_str)
         self.type = encountertype
         self.patientid = patientid
         self.raw_df = kwargs.get("raw_df", None)
@@ -94,18 +103,35 @@ class EncounterFactory():
     def __init__(self, encountertype):
         self.encounterType = encountertype
 
-    def make_encounters(self, events_df):
+    def make_encounters(self, patientid, events_df):
         events = []
-        for i, row in events_df.iterrows():
-            dictionary = self.translate_df_to_dict(row)
-            events.append(self.encounterType(**dictionary))
+        df_type = type(events_df)
+        if df_type == pd.DataFrame:
+            for i, row in events_df.iterrows():
+                self._add_event_to_events_list(patientid, row, events)
+        elif df_type == pd.Series:
+            self._add_event_to_events_list(patientid, events_df, events)
 
         return events
+
+    def _add_event_to_events_list(self, pid, df, events_list):
+        df = self._add_subjectid_to_df(df, pid)
+        dictionary = self.translate_df_to_dict(df)
+        try:
+            events_list.append(self.encounterType(**dictionary))
+        except ValueError as e:
+            logger.warning("A value error occurred when adding events to the events list for type: {}".format(type(self).__name__))
+
+
+    def _add_subjectid_to_df(self, df, pid):
+        if 'subject_id' not in df.keys():
+            df['subject_id'] = pid
+        return df
 
     def translate_df_to_dict(self, df_row):
         raise NotImplementedError("{c} has not implemented translate_df_to_dict yet!".format(c=type(self).__name__))
 
-    def __store_df_row(self, df_row):
+    def _store_df_row(self, df_row):
         df_dict = dict()
         df_dict["raw_df"] = df_row
 

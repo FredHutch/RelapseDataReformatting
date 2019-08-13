@@ -73,7 +73,7 @@ class RelapseEncounterFactory(EncounterFactory):
         super(RelapseEncounterFactory, self).__init__(RelapseEncounter)
 
     def translate_df_to_dict(self, df_row):
-        row_dictionary = self.__store_df_row(df_row)
+        row_dictionary = self._store_df_row(df_row)
         row_dictionary['date'] = df_row['date_response']
         row_dictionary['patientid'] = df_row['subject_id']
         row_dictionary['days_since_epoch'] = df_row['days_hct1_to_e']

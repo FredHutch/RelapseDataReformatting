@@ -20,7 +20,7 @@ class DemographicsEncounterFactory(EncounterFactory):
         super(DemographicsEncounterFactory, self).__init__(DemographicsEncounter)
 
     def translate_df_to_dict(self, df_row):
-        row_dictionary = self.__store_df_row(df_row)
+        row_dictionary = self._store_df_row(df_row)
         row_dictionary['date'] = df_row['hct1_date_manual']
         row_dictionary['patientid'] = df_row['uwid']
         row_dictionary['days_since_epoch'] = df_row['hct1_date_manual']

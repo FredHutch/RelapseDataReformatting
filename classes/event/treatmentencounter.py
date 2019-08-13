@@ -128,7 +128,7 @@ class TreatmentEncounterFactory(EncounterFactory):
         super(TreatmentEncounterFactory, self).__init__(TreatmentEncounter)
 
     def translate_df_to_dict(self, df_row):
-        row_dictionary = self.__store_df_row(df_row)
+        row_dictionary = self._store_df_row(df_row)
         row_dictionary['date'] = df_row.get('date_treatment', None)
         row_dictionary['patientid'] = df_row.get('subject_id', None)
         row_dictionary['days_since_epoch'] = df_row.get('days_hct1_to_tx', None)

@@ -28,13 +28,13 @@ class GVHDEncounterFactory(EncounterFactory):
         super(GVHDEncounterFactory, self).__init__(GVHDEncounter)
 
     def translate_df_to_dict(self, df_row):
-        row_dictionary = self.__store_df_row(df_row)
-        row_dictionary['date'] = df_row['date_gvhd']
-        row_dictionary['patientid'] = df_row['subject_id']
-        row_dictionary['days_since_epoch'] = df_row['days_hct1_gvhd']
-        row_dictionary['days_since_relapse'] = df_row['days_index_relapse_to_gvhd']
-        row_dictionary['gvhd_type'] = df_row['e_gvhd']
-        row_dictionary['acute_gvhd_grade'] = df_row['w_sub_agvh_grade']
-        row_dictionary['chronic_gvhd_severity'] = df_row['w_sub_cgvh_severity']
+        row_dictionary = self._store_df_row(df_row)
+        row_dictionary['date'] = df_row.get('date_gvhd', None)
+        row_dictionary['patientid'] = df_row.get('subject_id', None)
+        row_dictionary['days_since_epoch'] = df_row.get('days_hct1_gvhd', None)
+        row_dictionary['days_since_relapse'] = df_row.get('days_index_relapse_to_gvhd', None)
+        row_dictionary['gvhd_type'] = df_row.get('e_gvhd', None)
+        row_dictionary['acute_gvhd_grade'] = df_row.get('w_sub_agvh_grade', None)
+        row_dictionary['chronic_gvhd_severity'] = df_row.get('w_sub_cgvh_severity', None)
 
         return row_dictionary
