@@ -11,10 +11,13 @@ class Encounter():
         self.date = date
         if type(date) is pd.Timestamp:
             self.date = date.date()
+        elif type(date) is dt.datetime:
+            self.date = date
         elif type(date) is str:
             self.date = dt.datetime.strptime(date, '%Y-%m-%d')
         else:
-            error_str = "Warning! a valid date must be passed to Encounter!: date passed: {}".format(date)
+            error_str = "Warning! a valid date must be passed to Encounter!:" \
+                        " date passed: {} of type {}".format(date,type(date))
             raise ValueError(error_str)
         self.type = encountertype
         self.patientid = patientid
@@ -71,10 +74,12 @@ class Encounter():
         """
         if type(self.raw_df) == pd.DataFrame:
             return self.raw_df.to_dict(orient='records')[0]
+        if type(self.raw_df) == pd.Series:
+            return self.raw_df.to_dict()
         if type(self.raw_df) == dict:
             return self.raw_df
         if self.raw_df is None:
-            return None
+            return list()
         return ValueError(
             "the Dataframe supplied to Encounter {c} is invalid!: {df}".format(c=type(self).__name__, df=self.raw_df))
 
@@ -120,8 +125,9 @@ class EncounterFactory():
         try:
             events_list.append(self.encounterType(**dictionary))
         except ValueError as e:
-            logger.warning("A value error occurred when adding events to the events list for type: {}".format(type(self).__name__))
-
+            logger.warning(
+                "A value error occurred when adding events to the events list for type: {}  {e}".format(
+                    type(self).__name__, e=e))
 
     def _add_subjectid_to_df(self, df, pid):
         if 'subject_id' not in df.keys():

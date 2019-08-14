@@ -1,9 +1,13 @@
 import datetime as dt
+import logging
 from classes.collection.patienttimeline import PatientTimeline
 from classes.collection.eventday import EventDay
 from classes.collection.decisionpoint import DecisionPoint
 
 from typing import List
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class PatientTimelineEvaluator:
@@ -41,7 +45,6 @@ class PatientTimelineEvaluator:
         def mrd_relapse(self):
             return any(ed.mrd_relapse() for ed in self.event_days)
 
-
     def __init__(self, timewindow: int, dpoint_eval_window: int):
         self.target_timewindow = dt.timedelta(days=timewindow)
         self.mrd_response_timewindow = dt.timedelta(days=365)
@@ -53,7 +56,7 @@ class PatientTimelineEvaluator:
         decision_points = []
         for day in ordered_days:
             if self.is_decision_point(day):
-                decision_points.append(DecisionPoint(day))
+                decision_points.append(DecisionPoint(timeline.patientid, day))
 
         decision_points = self.consolidate_decision_pts(timeline, decision_points)
         self.assign_labels(timeline, decision_points)

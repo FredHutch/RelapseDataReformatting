@@ -8,7 +8,7 @@ class TreatmentEncounter(Encounter):
     OTHER_INDICATION = 9
 
     def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
-        super(TreatmentEncounter, self).__init__(patientid, date, "TreatmentEncounter")
+        super(TreatmentEncounter, self).__init__(patientid, date, "TreatmentEncounter", **kwargs)
         self.days_since_relapse = days_since_relapse
         self.days_since_hct = days_since_epoch
         self.rx_indication = kwargs.get('rx_indication', None)
@@ -136,20 +136,20 @@ class TreatmentEncounterFactory(EncounterFactory):
         row_dictionary['rx_indication'] = df_row.get('rx_indication', None)
 
         #begin treatment types
-        row_dictionary['induction_chemo'] = df_row.get('e_treatment__1', None)
-        row_dictionary['consolidation_chemo'] = df_row.get('e_treatment__2', None)
-        row_dictionary['hydroxyurea'] = df_row.get('e_treatment__3', None)
-        row_dictionary['intrathecal_therapy'] = df_row.get('e_treatment__4', None)
-        row_dictionary['radiation'] = df_row.get('e_treatment__5', None)
-        row_dictionary['hypomethylating'] = df_row.get('e_treatment__6', None)
-        row_dictionary['targeted'] = df_row.get('e_treatment__7', None)
-        row_dictionary['checkpoint_inhibitors'] = df_row.get('e_treatment__8', None)
-        row_dictionary['cytokine'] = df_row.get('e_treatment__9', None)
-        row_dictionary['cli'] = df_row.get('e_treatment__10', None)
-        row_dictionary['hct'] = df_row.get('e_treatment__11', None)
-        row_dictionary['other_np'] = df_row.get('e_treatment__12', None)
-        row_dictionary['palliative_chemo'] = df_row.get('e_treatment__13', None)
-        row_dictionary['other_tcell_targeted'] = df_row.get('e_treatment__14', None)
+        row_dictionary['induction_chemo'] = df_row.get('e_treatment___1', None)
+        row_dictionary['consolidation_chemo'] = df_row.get('e_treatment___2', None)
+        row_dictionary['hydroxyurea'] = df_row.get('e_treatment___3', None)
+        row_dictionary['intrathecal_therapy'] = df_row.get('e_treatment___4', None)
+        row_dictionary['radiation'] = df_row.get('e_treatment___5', None)
+        row_dictionary['hypomethylating'] = df_row.get('e_treatment___6', None)
+        row_dictionary['targeted'] = df_row.get('e_treatment___7', None)
+        row_dictionary['checkpoint_inhibitors'] = df_row.get('e_treatment___8', None)
+        row_dictionary['cytokine'] = df_row.get('e_treatment___9', None)
+        row_dictionary['cli'] = df_row.get('e_treatment___10', None)
+        row_dictionary['hct'] = df_row.get('e_treatment___11', None)
+        row_dictionary['other_np'] = df_row.get('e_treatment___12', None)
+        row_dictionary['palliative_chemo'] = df_row.get('e_treatment___13', None)
+        row_dictionary['other_tcell_targeted'] = df_row.get('e_treatment___14', None)
 
         return row_dictionary
 

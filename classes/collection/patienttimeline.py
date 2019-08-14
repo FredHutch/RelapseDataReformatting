@@ -1,11 +1,26 @@
+import logging
 from typing import List
 from datetime import datetime
 from classes.collection.eventday import EventDay
+from classes.collection.decisionpoint import DecisionPoint
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class PatientTimeline:
-    def __init__(self, eventdays: List[EventDay]):
+    def __init__(self, patientid, eventdays: List[EventDay]):
+        self.patientid = patientid
         self.event_days = eventdays
+        self.decision_points = list()
+
+    def add_decision_point(self, dp: DecisionPoint):
+        if dp.patientid == self.patientid:
+            self.decision_points.append(dp)
+        else:
+            logger.warning(
+                "Tried to attach decision point with id: {other} to timeline for: {us}".format(other=dp.patientid,
+                                                                                               us=self.patientid))
 
     def get_sorted_events(self):
         return sorted(self.event_days, key=lambda x: x.date)
