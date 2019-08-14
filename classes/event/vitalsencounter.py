@@ -45,7 +45,7 @@ class VitalsEncounterFactory(EncounterFactory):
         super(VitalsEncounterFactory, self).__init__(VitalsEncounter)
 
     def translate_df_to_dict(self, df_row):
-        row_dictionary = dict()
+        row_dictionary = self._store_df_row(df_row)
         row_dictionary['date'] = df_row['date_status']
         row_dictionary['patientid'] = df_row['subject_id']
         row_dictionary['days_since_epoch'] = df_row['days_hct1_to_status']

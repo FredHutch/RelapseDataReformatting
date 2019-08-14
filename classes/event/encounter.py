@@ -1,14 +1,24 @@
 import datetime as dt
 import pandas as pd
+from math import isnan
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 class Encounter():
-    def __init__(self, patientid, date, encountertype):
+    def __init__(self, patientid, date, encountertype, **kwargs):
         self.date = date
         if type(date) is pd.Timestamp:
             self.date = date.date()
-        elif type(date) is not dt.datetime:
-            self.date = dt.datetime.strptime(date, '%m-%d-%Y')
+        elif type(date) is str:
+            self.date = dt.datetime.strptime(date, '%Y-%m-%d')
+        else:
+            error_str = "Warning! a valid date must be passed to Encounter!: date passed: {}".format(date)
+            raise ValueError(error_str)
         self.type = encountertype
         self.patientid = patientid
+        self.raw_df = kwargs.get("raw_df", None)
 
     def __lt__(self, other):
         return self.date < other.date
@@ -45,7 +55,28 @@ class Encounter():
 
     @property
     def features(self):
-        return []
+        """
+        return the features for use in creating training rows
+        :return:
+        >>> import datetime as dt
+        >>> import pandas as pd
+        >>> raw_df = pd.DataFrame({"pid": 123, "date":dt.datetime.strptime("7-11-2019", '%m-%d-%Y'), "cat":"meow"}, index=[0])
+        >>> enc = Encounter(123, dt.datetime.strptime("7-11-2019", '%m-%d-%Y') , "dummy", raw_df=raw_df)
+        >>> enc.features
+        {'pid': 123, 'date': Timestamp('2019-07-11 00:00:00'), 'cat': 'meow'}
+        >>> raw_df = {"pid": 456, "date":dt.datetime.strptime("7-11-2019", '%m-%d-%Y'), "dog":"bork"}
+        >>> enc = Encounter(456, dt.datetime.strptime("7-11-2019", '%m-%d-%Y') , "dummy", raw_df=raw_df)
+        >>> enc.features
+        {'pid': 456, 'date': datetime.datetime(2019, 7, 11, 0, 0), 'dog': 'bork'}
+        """
+        if type(self.raw_df) == pd.DataFrame:
+            return self.raw_df.to_dict(orient='records')[0]
+        if type(self.raw_df) == dict:
+            return self.raw_df
+        if self.raw_df is None:
+            return None
+        return ValueError(
+            "the Dataframe supplied to Encounter {c} is invalid!: {df}".format(c=type(self).__name__, df=self.raw_df))
 
     @property
     def treatments(self):
@@ -72,13 +103,36 @@ class EncounterFactory():
     def __init__(self, encountertype):
         self.encounterType = encountertype
 
-    def make_encounters(self, events_df):
+    def make_encounters(self, patientid, events_df):
         events = []
-        for i, row in events_df.iterrows():
-            dict = self.translate_df_to_dict(row)
-            events.append(self.encounterType(**dict))
+        df_type = type(events_df)
+        if df_type == pd.DataFrame:
+            for i, row in events_df.iterrows():
+                self._add_event_to_events_list(patientid, row, events)
+        elif df_type == pd.Series:
+            self._add_event_to_events_list(patientid, events_df, events)
 
         return events
 
+    def _add_event_to_events_list(self, pid, df, events_list):
+        df = self._add_subjectid_to_df(df, pid)
+        dictionary = self.translate_df_to_dict(df)
+        try:
+            events_list.append(self.encounterType(**dictionary))
+        except ValueError as e:
+            logger.warning("A value error occurred when adding events to the events list for type: {}".format(type(self).__name__))
+
+
+    def _add_subjectid_to_df(self, df, pid):
+        if 'subject_id' not in df.keys():
+            df['subject_id'] = pid
+        return df
+
     def translate_df_to_dict(self, df_row):
         raise NotImplementedError("{c} has not implemented translate_df_to_dict yet!".format(c=type(self).__name__))
+
+    def _store_df_row(self, df_row):
+        df_dict = dict()
+        df_dict["raw_df"] = df_row
+
+        return df_dict
