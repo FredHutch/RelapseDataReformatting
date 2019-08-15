@@ -25,21 +25,27 @@ gateway_feature_recode_map = {'cmvx': {'-/-': 'neg_neg', '-/': 'neg_neg', '/': '
                               'tbidose': {'0': 'le450', '200': 'le450', '300': 'le450', '450': 'le450',
                                           '1200': 'ge1200', '1320': 'ge1200'},
                               'proplbl': {
+                                  # contains full list of the proplbl
                                   'FK506': 'CNI',
                                   'NEORAL': 'CNI',
                                   'CSP': 'CNI',
+                                  'CYCLOSPORINE': 'CNI',
+                                  'CSA': 'CNI',
+                                  'TACROLIMUS' : 'CNI',
                                   'RAPA': 'RAPA',
+                                  'SIROLIUMS': 'RAPA',
                                   'MMF': 'MMF',
-                                  'CY': 'CY',
+                                  '[MYCOPHENOLATESODIUM]': 'MMF',
+                                  'CY': 'Post-Transplant_Cyclophosphamide',
+                                  'PTCY': 'Post-Transplant_Cyclophosphamide',
                                   'STEROIDS': '', # ignore STEROIDS
-                                  'MTX': '??', # waiting for confirmation
-                                  '[MYCOPHENOLATESODIUM]': '??' # waiting for confirmation
+                                  'MTX': 'MTX'
                               },
-                              'hla_cco': {'ISO/MATCHED': '??',
-                                          'REL/HAPLOIDENTICAL': 'REL/HAPLOIDENTICAL',
+                              'hla_cco': {'ISO/MATCHED': 'REL/MATCHED',
                                           'REL/MATCHED': 'REL/MATCHED',
                                           'REL/MISMATCH': 'REL/MISMATCH',
-                                          'REL/UNKNOWN': '??',
+                                          'REL/HAPLOIDENTICAL': 'REL/HAPLOIDENTICAL',
+                                          'REL/UNKNOWN': '',
                                           'RD/CORD': 'CORD',
                                           'URD/CORD-COMBINED': 'CORD',
                                           'URD/MATCHED': 'URD/MATCHED',
