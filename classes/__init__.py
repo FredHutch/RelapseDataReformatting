@@ -1,7 +1,9 @@
 import itertools
 import logging
 
-from classes.event import gvhdencounter, relapseencounter, treatmentencounter, vitalsencounter, demographicsencounter
+from classes.event import gvhdencounter, relapseencounter, treatmentencounter, \
+                          vitalsencounter, demographicsencounter, ispencounter \
+                          graftrejectionencounter
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -12,21 +14,19 @@ INSTRUMENT_TO_FACTORY_MAP = {'treatment_event': treatmentencounter.TreatmentEnco
                              'vital_status': vitalsencounter.VitalsEncounterFactory,
                              'response_or_relapse_event': relapseencounter.RelapseEncounterFactory,
                              'patient_id': demographicsencounter.DemographicsEncounterFactory,
-                             # immunosuppression_kinetics ?
+                             'immunosuppression_kinetics': ispencounter.ISPEncounterFactory,
+                             'graft_rejection':graftrejectionencounter.GraftRejectionEncounterFactory
                              # primary_prophylaxis_against_relapse ?
-                             # immunosuppression_kinetics ?
                              # prehct1_treatment ?
-                             # graft_rejection ?
                              }
 
 REPEAT_FORMS = {'treatment_event',
                 'gvhd',
                 'response_or_relapse_event',
-                # immunosuppression_kinetics ?
+                'immunosuppression_kinetics',
+                'graft_rejection'
                 # primary_prophylaxis_against_relapse ?
-                # immunosuppression_kinetics ?
                 # prehct1_treatment ?
-                # graft_rejection ?
                 }
 
 
