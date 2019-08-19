@@ -8,8 +8,6 @@ from classes.collection.eventday import EventDay
 
 from redcap import Project, RedcapError
 
-NON_REPEAT_FORMS = set(['vital_status', 'patient_id'])
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -30,6 +28,7 @@ def pull_from_red_cap(config):
         except RedcapError:
             print("Failure to export records from REDCap for form: {}".format(form))
             continue
+
         events = map_instrument_df_to_class(form, intermediate_df)
 
         for event in events:
