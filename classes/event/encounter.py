@@ -4,22 +4,11 @@ from math import isnan
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 class Encounter():
     def __init__(self, patientid, date, encountertype, **kwargs):
-        self.date = date
-        if type(date) is pd.Timestamp:
-            self.date = date.date()
-        elif type(date) is dt.datetime:
-            self.date = date
-        elif type(date) is str:
-            self.date = dt.datetime.strptime(date, '%Y-%m-%d')
-        else:
-            error_str = "Warning! a valid date must be passed to Encounter!:" \
-                        " date passed: {} of type {}".format(date,type(date))
-            raise ValueError(error_str)
-        self.type = encountertype
+        self.date = self._date_coercion(date)
+        self.type = type(self).__name__
         self.patientid = patientid
         self.raw_df = kwargs.get("raw_df", None)
 
@@ -34,6 +23,19 @@ class Encounter():
 
     def __str__(self):
         return "patientid: {pid} date: {d} type: {t}".format(pid=self.patientid, d=self.date, t=self.type)
+
+    @classmethod
+    def _date_coercion(cls, check_date):
+        if type(check_date) is pd.Timestamp:
+            return check_date.check_date()
+        elif type(check_date) is dt.datetime:
+            return check_date
+        elif type(check_date) is str:
+            return dt.datetime.strptime(check_date, '%Y-%m-%d')
+        else:
+            error_str = "Warning! a valid check_date must be passed to Encounter!:" \
+                        " check_date passed: {} of type {}".format(check_date, type(check_date))
+            raise ValueError(error_str)
 
     def died(self):
         """
@@ -119,9 +121,9 @@ class EncounterFactory():
 
         return events
 
-    def _add_event_to_events_list(self, pid, df, events_list):
-        df = self._add_subjectid_to_df(df, pid)
-        dictionary = self.translate_df_to_dict(df)
+    def _add_event_to_events_list(self, pid, df_row, events_list):
+        df_row = self._add_subjectid_to_df(df_row, pid)
+        dictionary = self.translate_df_to_dict(df_row)
         try:
             events_list.append(self.encounterType(**dictionary))
         except ValueError as e:

@@ -22,6 +22,13 @@ class PatientTimeline:
                 "Tried to attach decision point with id: {other} to timeline for: {us}".format(other=dp.patientid,
                                                                                                us=self.patientid))
 
+    def get_time_between_decision_points(self):
+        sum_delta = 0
+        for first, scnd in zip(self.decision_points, self.decision_points[1:]):
+            sum_delta += (scnd.eval_date - first.eval_date).days
+
+        return sum_delta
+
     def get_sorted_events(self):
         return sorted(self.event_days, key=lambda x: x.date)
 

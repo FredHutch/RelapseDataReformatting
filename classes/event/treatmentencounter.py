@@ -1,4 +1,9 @@
+import datetime
+import logging
+import pandas as pd
 from classes.event.encounter import Encounter, EncounterFactory
+
+logger = logging.getLogger(__name__)
 
 class TreatmentEncounter(Encounter):
     INDUCTION = 1
@@ -7,9 +12,10 @@ class TreatmentEncounter(Encounter):
     MAINTENANCE_CR = 4
     OTHER_INDICATION = 9
 
-    def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
+    def __init__(self, patientid, date, start_date, days_since_epoch, days_since_relapse, **kwargs):
         super(TreatmentEncounter, self).__init__(patientid, date, "TreatmentEncounter", **kwargs)
         self.days_since_relapse = days_since_relapse
+        self.start_date = self._date_coercion(start_date)
         self.days_since_hct = days_since_epoch
         self.rx_indication = kwargs.get('rx_indication', None)
         self.treatment_dict = dict()
@@ -39,7 +45,7 @@ class TreatmentEncounter(Encounter):
         return [k for k,v in self.treatment_dict.items() if v == 1]
 
     def has_consolidation_maintenance(self):
-        '''
+        """
         whether consolidation/maintenance therapy was administered
         per Krakow JUL19:
             1 : when rx_indication in [3 (Consolidation of CR),4(Maintenance of CR),•	1 : when rx_indication in [3 (Consolidation of CR),4(Maintenance of CR),
@@ -53,11 +59,11 @@ class TreatmentEncounter(Encounter):
         >>> encounter.treatment_dict['hydroxyurea'] = 1
         >>> encounter.has_consolidation_maintenance()
         True
-        '''
+        """
         return any((self.treatment_dict['hydroxyurea'], self.treatment_dict['intrathecal_therapy'], self.treatment_dict['checkpoint_inhibitors']))
 
     def is_decision_point(self):
-        '''
+        """
         return whether the treatment encounter should be considered a decision point
         per Krakow JUL19:
             Including a consolidation or maintenance treatment,
@@ -83,17 +89,18 @@ class TreatmentEncounter(Encounter):
         >>> encounter.rx_indication = TreatmentEncounter.INDUCTION
         >>> encounter.is_decision_point()
         True
-        '''
-        return (any((self.treatment_dict['induction_chemo'],
-                self.treatment_dict['consolidation_chemo'],
-                self.treatment_dict['radiation'],
-                self.treatment_dict['targeted'],
-                self.treatment_dict['checkpoint_inhibitors'],
-                self.treatment_dict['cytokine'],
-                self.treatment_dict['cli'],
-                self.treatment_dict['hct'],
-                self.treatment_dict['other_np'],
-                self.treatment_dict['other_tcell_targeted']))
+        """
+        return (self.date == self.start_date
+                and any((self.treatment_dict['induction_chemo'],
+                        self.treatment_dict['consolidation_chemo'],
+                        self.treatment_dict['radiation'],
+                        self.treatment_dict['targeted'],
+                        self.treatment_dict['checkpoint_inhibitors'],
+                        self.treatment_dict['cytokine'],
+                        self.treatment_dict['cli'],
+                        self.treatment_dict['hct'],
+                        self.treatment_dict['other_np'],
+                        self.treatment_dict['other_tcell_targeted']))
                and self.rx_indication != TreatmentEncounter.OTHER_INDICATION)
 
 class TreatmentEncounterFactory(EncounterFactory):
@@ -127,9 +134,37 @@ class TreatmentEncounterFactory(EncounterFactory):
     def __init__(self):
         super(TreatmentEncounterFactory, self).__init__(TreatmentEncounter)
 
+    def _add_event_to_events_list(self, pid, df_row, events_list):
+        df_row = self._add_subjectid_to_df(df_row, pid)
+        df_row = self._add_start_date_to_df(df_row)
+        delta = 1
+        if not pd.isna(df_row['w_target_stop']):
+            msg = "ALERT! Multi-day treatment event found for PatientId {pid}. " \
+                  "Splitting into multiple TreatmentEncounter objects. start: {start} stop: {stop}".format(
+                pid=pid, start=df_row['date_treatment'], stop=df_row['w_target_stop'])
+            logger.debug(msg)
+            end_date = TreatmentEncounter._date_coercion(df_row['w_target_stop'])
+            start_date = TreatmentEncounter._date_coercion(df_row['date_treatment'])
+            delta += (end_date - start_date).days
+
+        for d in range(delta):
+            try:
+                df_row['date_treatment'] = TreatmentEncounter._date_coercion(df_row['start_date']) + datetime.timedelta(days=d)
+                dictionary = self.translate_df_to_dict(df_row)
+                events_list.append(self.encounterType(**dictionary))
+            except ValueError as e:
+                logger.warning(
+                    "A value error occurred when adding events to the events list for type: {}  {e}".format(
+                        type(self).__name__, e=e))
+
+    def _add_start_date_to_df(self, df):
+        df['start_date'] = df['date_treatment']
+        return df
+
     def translate_df_to_dict(self, df_row):
         row_dictionary = self._store_df_row(df_row)
-        row_dictionary['date'] = df_row.get('date_treatment', None)
+        row_dictionary['date'] = df_row.get('date_treatment', None) #this row is modified to show the date modeled date; the original date_treatment is stored below
+        row_dictionary['start_date'] = df_row.get('start_date', None) #this is a synthetic row to split represented date vs date of treatment begun
         row_dictionary['patientid'] = df_row.get('subject_id', None)
         row_dictionary['days_since_epoch'] = df_row.get('days_hct1_to_tx', None)
         row_dictionary['days_since_relapse'] = df_row.get('days_index_relapse_to_tx', None)

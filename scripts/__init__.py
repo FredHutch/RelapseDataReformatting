@@ -1,12 +1,13 @@
 import logging
 import datetime as dt
 from logging.handlers import RotatingFileHandler
-formatter = logging.Formatter(
-    "%(asctime)s %(threadName)-11s %(levelname)-10s %(message)s")
 
-logger = logging.getLogger()
+
+formatter = logging.Formatter(
+        "%(asctime)s %(threadName)-11s %(levelname)-10s %(message)s")
+
 streamhandler = logging.StreamHandler()
-streamhandler.setLevel(logging.INFO)
+streamhandler.setLevel(logging.DEBUG)
 streamhandler.setFormatter(formatter)
 
 file_handler = RotatingFileHandler('RelapseDataFormatting_{}.log'.format(dt.datetime.now().date()),
@@ -14,6 +15,4 @@ file_handler = RotatingFileHandler('RelapseDataFormatting_{}.log'.format(dt.date
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 
-logger.addHandler(file_handler)
-logger.addHandler(streamhandler)
-logger.setLevel(logging.INFO)
+logging.basicConfig(format=formatter, handlers=[file_handler, streamhandler], level=logging.INFO)

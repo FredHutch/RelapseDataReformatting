@@ -10,6 +10,7 @@ class DecisionPoint:
             self.eventdays = [eventdays]
         self.label = None
         self.label_cause = None
+        self.target_date = None
 
     def __eq__(self, other):
         if isinstance(other, DecisionPoint):
@@ -39,6 +40,7 @@ class DecisionPoint:
                 self.eventdays.append(ed)
         else:
             raise ValueError("Cannot add a non-event day to the decision point!")
+
     @property
     def eval_date(self):
         """
