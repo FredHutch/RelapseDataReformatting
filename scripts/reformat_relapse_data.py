@@ -7,8 +7,8 @@ from classes.collection.patienttimeline import PatientTimeline
 from classes.evaluator.patienttimelineevaluator import PatientTimelineEvaluator
 from redcap import Project, RedcapError
 
-NON_REPEAT_FORMS = {'vital_status', 'patient_id'}
-
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def pull_from_red_cap(config):
@@ -27,6 +27,7 @@ def pull_from_red_cap(config):
         except RedcapError:
             logger.warning("Failure to export records from REDCap for form: {}".format(form))
             continue
+
         events = map_instrument_df_to_class(form, intermediate_df)
 
         for event in events:
