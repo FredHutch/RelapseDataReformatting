@@ -57,11 +57,12 @@ class PatientTimelineEvaluator:
         for day in ordered_days:
             if self.is_decision_point(day):
                 decision_points.append(DecisionPoint(timeline.patientid, day))
-        logger.debug(("Before Consolidation, {} Decision Points were found for Patient {}".format(len(decision_points), timeline.patientid)))
+        logger.debug(("Before Consolidation, {} Decision Points were found for Patient {}".format(len(decision_points),
+                                                                                                  timeline.patientid)))
         decision_points = self.consolidate_decision_pts(timeline, decision_points)
-        logger.info(("After Consolidation, {} Decision Points were found for Patient {}".format(len(decision_points), timeline.patientid)))
+        logger.info(("After Consolidation, {} Decision Points were found for Patient {}".format(len(decision_points),
+                                                                                                timeline.patientid)))
         self.assign_labels(timeline, decision_points)
-
 
         return decision_points
 
@@ -71,6 +72,7 @@ class PatientTimelineEvaluator:
         -if two decision points are within the consolidation window of each other,
          treat them as one decision point
         -recursively perform this until it is no longer possible.
+        :param timeline: the supporting PatientTimeline
         :param decisionpts: a list of DecisionPoint
         :return: a list of DecisionPoint
         """
@@ -83,9 +85,10 @@ class PatientTimelineEvaluator:
             # if the current decision point and the previous decision point are within the window for consolidation
             # AND there are no intervening events
             if (pt.eval_date - consolidated_dpts[-1].eval_date) <= self.decision_point_consolidation_window and not any(
-                ed.relapse() for ed in timeline.get_events_in_range(consolidated_dpts[-1].eval_date, pt.eval_date)):
-                msg = "DecisionPoint Consolidation Event: adding Decision Point {new} to preceeding DecisionPoint {old}".format(
-                    new=pt, old=consolidated_dpts[-1])
+                    ed.relapse() for ed in timeline.get_events_in_range(consolidated_dpts[-1].eval_date, pt.eval_date)):
+                msg = "DecisionPoint Consolidation Event: adding Decision Point {new}" \
+                      " to preceeding DecisionPoint {old}".format(
+                        new=pt, old=consolidated_dpts[-1])
                 logger.debug(msg)
                 consolidated_dpts[-1].add_event_day(pt.eventdays)
             else:
@@ -114,11 +117,18 @@ class PatientTimelineEvaluator:
                 context.add_eventday(target_day)
                 cause = self.target_eval(dpt, target_day, context)
                 if cause is not None:
+                    logger.info(
+                        "Decision Point Positive Label was found. PatientId: {pid} LabelDate: {dt} Decision Point: {dp}"
+                        "  Target Day: {ed} Context: {c}  Cause: {cause}".format(
+                            pid=timeline.patientid, dt=target_day.date, dp=dpt, ed=target_day, c=context, cause=cause))
                     dpt.label_cause = cause
                     dpt.label = True
                     dpt.target_date = target_day.date
                     break
-            if dpt.label_cause is None: # no valid positive label rule found
+            if dpt.label_cause is None:   # no valid positive label rule found
+                logger.info(
+                    "Decision Point Negative Label assigned to PatientId: {pid} Decision Point: {dp}".format(pid=timeline.patientid,
+                                                                                              dp=dpt))
                 dpt.label = False
 
     def target_eval(self, dpt: DecisionPoint, day: EventDay, context: Context):
@@ -129,10 +139,15 @@ class PatientTimelineEvaluator:
             -The patient had no response to the treatment AND
         or the following occurs within a year:
             -the patient relapsed from MRD within decision window AND there was a change in Tx within a year
+        :param dpt:
         :param day:
-        :return:
+        :param context:
+        :return: String Representation of positive label reason or None
         """
+
         time_window = day.date - dpt.eval_date
+        logging.debug(
+            "DecisionPoint: {dp} Compared EventDay: {ed} Provided Context: {c}".format(dp=dpt, ed=day, c=context))
         if time_window <= self.target_timewindow:
             if day.died():
                 return "Death"
