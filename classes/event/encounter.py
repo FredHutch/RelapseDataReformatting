@@ -6,6 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Encounter():
+    EXPECTED_DATE_STRING_FORMAT = '%Y-%m-%d'
     def __init__(self, patientid, date, encountertype, **kwargs):
         self.date = self._date_coercion(date)
         self.type = type(self).__name__
@@ -31,10 +32,11 @@ class Encounter():
         elif type(check_date) is dt.datetime:
             return check_date
         elif type(check_date) is str:
-            return dt.datetime.strptime(check_date, '%Y-%m-%d')
+            return dt.datetime.strptime(check_date, cls.EXPECTED_DATE_STRING_FORMAT)
         else:
-            error_str = "Warning! a valid check_date must be passed to Encounter!:" \
-                        " check_date passed: {} of type {}".format(check_date, type(check_date))
+            error_str = "Warning! a valid check_date must be passed to Encounter! " \
+                        "If it is a string it must be formatted like {}:" \
+                        " check_date passed: {} of type {}".format(cls.EXPECTED_DATE_STRING_FORMAT, check_date, type(check_date))
             raise ValueError(error_str)
 
     def died(self):

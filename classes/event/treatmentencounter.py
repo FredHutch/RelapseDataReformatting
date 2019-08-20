@@ -163,8 +163,11 @@ class TreatmentEncounterFactory(EncounterFactory):
 
     def translate_df_to_dict(self, df_row):
         row_dictionary = self._store_df_row(df_row)
-        row_dictionary['date'] = df_row.get('date_treatment', None) #this row is modified to show the date modeled date; the original date_treatment is stored below
-        row_dictionary['start_date'] = df_row.get('start_date', None) #this is a synthetic row to split represented date vs date of treatment begun
+        # this row is modified to show the modeled date in the case of a multi-day Treatment;
+        # the original date_treatment is stored below in start_date
+        row_dictionary['date'] = df_row.get('date_treatment', None)
+        # this is a synthetic row to split represented date ('date') vs date of treatment begun ('start_date')
+        row_dictionary['start_date'] = df_row.get('start_date', None)
         row_dictionary['patientid'] = df_row.get('subject_id', None)
         row_dictionary['days_since_epoch'] = df_row.get('days_hct1_to_tx', None)
         row_dictionary['days_since_relapse'] = df_row.get('days_index_relapse_to_tx', None)
