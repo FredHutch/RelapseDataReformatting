@@ -3,7 +3,7 @@ import logging
 
 from classes.event import gvhdencounter, relapseencounter, treatmentencounter, \
                           vitalsencounter, demographicsencounter, ispencounter \
-                          graftrejectionencounter
+                          graftrejectionencounter, gatewayencounter
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -16,6 +16,7 @@ INSTRUMENT_TO_FACTORY_MAP = {'treatment_event': treatmentencounter.TreatmentEnco
                              'patient_id': demographicsencounter.DemographicsEncounterFactory,
                              'immunosuppression_kinetics': ispencounter.ISPEncounterFactory,
                              'graft_rejection':graftrejectionencounter.GraftRejectionEncounterFactory
+                             'gatewayEncounter': gatewayencounter.gatewayEncounterFactory
                              # primary_prophylaxis_against_relapse ?
                              # prehct1_treatment ?
                              }
@@ -24,7 +25,8 @@ REPEAT_FORMS = {'treatment_event',
                 'gvhd',
                 'response_or_relapse_event',
                 'immunosuppression_kinetics',
-                'graft_rejection'
+                'graft_rejection',
+                # gateway ??
                 # primary_prophylaxis_against_relapse ?
                 # prehct1_treatment ?
                 }
