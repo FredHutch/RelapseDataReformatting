@@ -8,6 +8,18 @@ class EventDay():
         for event in events:
             self.add_event(event)
 
+    def __repr__(self):
+        return "{c} instance: patientid: {pid} date: {d} events: {e}".format(c=type(self).__name__,
+                                                                           pid=self.patientid,
+                                                                           d=self.date,
+                                                                           e=self.events)
+
+    def __str__(self):
+        return "patientid: {pid} date: {d} events: {e}".format(pid=self.patientid,
+                                                               d=self.date,
+                                                               e=self.events)
+
+
     def add_event(self, event):
         """
         Add a new Event to the collection of events for the EventDay's given date and patient

@@ -2,7 +2,7 @@ from classes.event.encounter import Encounter, EncounterFactory
 
 class GVHDEncounter(Encounter):
     def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
-        super(GVHDEncounter, self).__init__(patientid, date, "GVHDEncounter")
+        super(GVHDEncounter, self).__init__(patientid, date, "GVHDEncounter", **kwargs)
         self.days_since_epoch = days_since_epoch
         self.days_since_relapse = days_since_relapse
 

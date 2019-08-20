@@ -4,19 +4,12 @@ from math import isnan
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 class Encounter():
+    EXPECTED_DATE_STRING_FORMAT = '%Y-%m-%d'
     def __init__(self, patientid, date, encountertype, **kwargs):
-        self.date = date
-        if type(date) is pd.Timestamp:
-            self.date = date.date()
-        elif type(date) is str:
-            self.date = dt.datetime.strptime(date, '%Y-%m-%d')
-        else:
-            error_str = "Warning! a valid date must be passed to Encounter!: date passed: {}".format(date)
-            raise ValueError(error_str)
-        self.type = encountertype
+        self.date = self._date_coercion(date)
+        self.type = type(self).__name__
         self.patientid = patientid
         self.raw_df = kwargs.get("raw_df", None)
 
@@ -31,6 +24,20 @@ class Encounter():
 
     def __str__(self):
         return "patientid: {pid} date: {d} type: {t}".format(pid=self.patientid, d=self.date, t=self.type)
+
+    @classmethod
+    def _date_coercion(cls, check_date):
+        if type(check_date) is pd.Timestamp:
+            return check_date.check_date()
+        elif type(check_date) is dt.datetime:
+            return check_date
+        elif type(check_date) is str:
+            return dt.datetime.strptime(check_date, cls.EXPECTED_DATE_STRING_FORMAT)
+        else:
+            error_str = "Warning! a valid check_date must be passed to Encounter! " \
+                        "If it is a string it must be formatted like {}:" \
+                        " check_date passed: {} of type {}".format(cls.EXPECTED_DATE_STRING_FORMAT, check_date, type(check_date))
+            raise ValueError(error_str)
 
     def died(self):
         """
@@ -71,10 +78,12 @@ class Encounter():
         """
         if type(self.raw_df) == pd.DataFrame:
             return self.raw_df.to_dict(orient='records')[0]
+        if type(self.raw_df) == pd.Series:
+            return self.raw_df.to_dict()
         if type(self.raw_df) == dict:
             return self.raw_df
         if self.raw_df is None:
-            return None
+            return list()
         return ValueError(
             "the Dataframe supplied to Encounter {c} is invalid!: {df}".format(c=type(self).__name__, df=self.raw_df))
 
@@ -114,14 +123,15 @@ class EncounterFactory():
 
         return events
 
-    def _add_event_to_events_list(self, pid, df, events_list):
-        df = self._add_subjectid_to_df(df, pid)
-        dictionary = self.translate_df_to_dict(df)
+    def _add_event_to_events_list(self, pid, df_row, events_list):
+        df_row = self._add_subjectid_to_df(df_row, pid)
+        dictionary = self.translate_df_to_dict(df_row)
         try:
             events_list.append(self.encounterType(**dictionary))
         except ValueError as e:
-            logger.warning("A value error occurred when adding events to the events list for type: {}".format(type(self).__name__))
-
+            logger.warning(
+                "A value error occurred when adding events to the events list for type: {}  {e}".format(
+                    type(self).__name__, e=e))
 
     def _add_subjectid_to_df(self, df, pid):
         if 'subject_id' not in df.keys():

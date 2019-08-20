@@ -1,3 +1,6 @@
+#ignore log files
+*.log*
+
 # ignore the config file with secrets
 config.json
 

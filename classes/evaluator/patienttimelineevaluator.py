@@ -1,9 +1,13 @@
 import datetime as dt
+import logging
 from classes.collection.patienttimeline import PatientTimeline
 from classes.collection.eventday import EventDay
 from classes.collection.decisionpoint import DecisionPoint
 
 from typing import List
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class PatientTimelineEvaluator:
@@ -41,7 +45,6 @@ class PatientTimelineEvaluator:
         def mrd_relapse(self):
             return any(ed.mrd_relapse() for ed in self.event_days)
 
-
     def __init__(self, timewindow: int, dpoint_eval_window: int):
         self.target_timewindow = dt.timedelta(days=timewindow)
         self.mrd_response_timewindow = dt.timedelta(days=365)
@@ -53,10 +56,12 @@ class PatientTimelineEvaluator:
         decision_points = []
         for day in ordered_days:
             if self.is_decision_point(day):
-                decision_points.append(DecisionPoint(day))
-
+                decision_points.append(DecisionPoint(timeline.patientid, day))
+        logger.debug(("Before Consolidation, {} Decision Points were found for Patient {}".format(len(decision_points), timeline.patientid)))
         decision_points = self.consolidate_decision_pts(timeline, decision_points)
+        logger.info(("After Consolidation, {} Decision Points were found for Patient {}".format(len(decision_points), timeline.patientid)))
         self.assign_labels(timeline, decision_points)
+
 
         return decision_points
 
@@ -79,6 +84,9 @@ class PatientTimelineEvaluator:
             # AND there are no intervening events
             if (pt.eval_date - consolidated_dpts[-1].eval_date) <= self.decision_point_consolidation_window and not any(
                 ed.relapse() for ed in timeline.get_events_in_range(consolidated_dpts[-1].eval_date, pt.eval_date)):
+                msg = "DecisionPoint Consolidation Event: adding Decision Point {new} to preceeding DecisionPoint {old}".format(
+                    new=pt, old=consolidated_dpts[-1])
+                logger.debug(msg)
                 consolidated_dpts[-1].add_event_day(pt.eventdays)
             else:
                 consolidated_dpts.append(pt)
@@ -86,9 +94,8 @@ class PatientTimelineEvaluator:
         return consolidated_dpts
 
     def is_decision_point(self, day: EventDay):
-        if day.treatments:
+        if day.is_decision_point():
             return True
-
         return False
 
     def assign_labels(self, timeline: PatientTimeline, decision_points: List[DecisionPoint]):
@@ -109,6 +116,7 @@ class PatientTimelineEvaluator:
                 if cause is not None:
                     dpt.label_cause = cause
                     dpt.label = True
+                    dpt.target_date = target_day.date
                     break
             if dpt.label_cause is None: # no valid positive label rule found
                 dpt.label = False

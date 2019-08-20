@@ -11,7 +11,7 @@ def _make_event_day(pid, date, **kwargs):
         ed.add_event(event)
     return ed
 
-def _make_timeline(eds: List[EventDay]):
-    timeline = PatientTimeline(eds)
+def _make_timeline(pid, eds: List[EventDay]):
+    timeline = PatientTimeline(pid, eds)
 
     return timeline

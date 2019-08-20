@@ -3,7 +3,7 @@ from classes.event.encounter import Encounter, EncounterFactory
 
 class VitalsEncounter(Encounter):
     def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
-        super(VitalsEncounter, self).__init__(patientid, date, "VitalsEncounter")
+        super(VitalsEncounter, self).__init__(patientid, date, "VitalsEncounter", **kwargs)
         self.days_since_epoch = days_since_epoch
         self.days_since_relapse = days_since_relapse
 

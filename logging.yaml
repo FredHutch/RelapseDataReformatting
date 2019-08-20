@@ -1,0 +1,26 @@
+version: 1
+disable_existing_loggers: False
+formatters:
+  formatter:
+    format : '%(asctime)s %(threadName)-11s %(levelname)-10s %(message)s'
+handlers:
+  cons:
+    class : logging.StreamHandler
+    formatter: formatter
+    level   : INFO
+    stream : ext://sys.stdout
+  file:
+    class : logging.handlers.RotatingFileHandler
+    formatter: formatter
+    level: DEBUG
+    filename: RelapseDataFormatting.log
+    maxBytes: 10485760
+    backupCount: 3
+loggers:
+  classes.event:
+    level: DEBUG
+    handlers: [cons]
+    propagate: yes
+root:
+  level: INFO
+  handlers: [cons, file]

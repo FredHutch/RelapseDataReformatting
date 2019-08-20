@@ -65,19 +65,19 @@ class TestPatientTimelineEvaluator:
 
 
         self.evaluator = pte.PatientTimelineEvaluator(self.TIME_WINDOW, self.DPOINT_WINDOW)
-        self.timeline = _make_timeline([self.ed1, self.ed2, self.ed3, self.ed4, self.ed5, self.ed6, self.ed7])
+        self.timeline = _make_timeline(self.PID, [self.ed1, self.ed2, self.ed3, self.ed4, self.ed5, self.ed6, self.ed7])
 
     def _make_encounter_with_timeshift(self, enc, pid, date, epoch, relapse, offset=0, **kwargs):
         return enc(pid, date + timedelta(days=offset), epoch + offset, relapse + offset, **kwargs)
 
     def test_pte_evaluate(self):
-        dpt1 = DecisionPoint(eventdays=[self.ed1, self.ed2])
+        dpt1 = DecisionPoint(patientid=self.PID, eventdays=[self.ed1, self.ed2])
         dpt1.label_cause = 'Morphological Relapse'
         dpt1.label = True
-        dpt2 = DecisionPoint(eventdays=[self.ed5])
+        dpt2 = DecisionPoint(patientid=self.PID, eventdays=[self.ed5])
         dpt2.label_cause = 'No Response + New Tx'
         dpt2.label = True
-        dpt3 = DecisionPoint(eventdays=[self.ed6])
+        dpt3 = DecisionPoint(patientid=self.PID, eventdays=[self.ed6])
         dpt3.label_cause = None
         dpt3.label = False
 
@@ -85,24 +85,24 @@ class TestPatientTimelineEvaluator:
         assert_equals(actual_dpts, [dpt1, dpt2, dpt3])
 
     def test_consolidate_decision_points(self):
-        dpt1 = DecisionPoint(eventdays=[self.ed1])
-        dpt2 = DecisionPoint(eventdays=[self.ed2])
-        dpt3 = DecisionPoint(eventdays=[self.ed5])
-        dpt4 = DecisionPoint(eventdays=[self.ed6])
+        dpt1 = DecisionPoint(patientid=self.PID, eventdays=[self.ed1])
+        dpt2 = DecisionPoint(patientid=self.PID, eventdays=[self.ed2])
+        dpt3 = DecisionPoint(patientid=self.PID, eventdays=[self.ed5])
+        dpt4 = DecisionPoint(patientid=self.PID, eventdays=[self.ed6])
 
-        merged_dpt1 = DecisionPoint(eventdays=[self.ed1, self.ed2])
-        merged_dpt2 = DecisionPoint(eventdays=[self.ed5])
-        merged_dpt3 = DecisionPoint(eventdays=[self.ed6])
+        merged_dpt1 = DecisionPoint(patientid=self.PID, eventdays=[self.ed1, self.ed2])
+        merged_dpt2 = DecisionPoint(patientid=self.PID, eventdays=[self.ed5])
+        merged_dpt3 = DecisionPoint(patientid=self.PID, eventdays=[self.ed6])
 
         actual_dpts = self.evaluator.consolidate_decision_pts(self.timeline, [dpt1, dpt2, dpt3, dpt4])
         assert_equals(actual_dpts, [merged_dpt1, merged_dpt2, merged_dpt3])
 
     def test_consolidate_decision_points_relapse_breakpoint(self):
-        dpt1 = DecisionPoint(eventdays=[self.ed5])
-        dpt2 = DecisionPoint(eventdays=[self.ed6])
+        dpt1 = DecisionPoint(patientid=self.PID, eventdays=[self.ed5])
+        dpt2 = DecisionPoint(patientid=self.PID, eventdays=[self.ed6])
 
-        merged_dpt1 = DecisionPoint(eventdays=[self.ed5])
-        merged_dpt2 = DecisionPoint(eventdays=[self.ed6])
+        merged_dpt1 = DecisionPoint(patientid=self.PID, eventdays=[self.ed5])
+        merged_dpt2 = DecisionPoint(patientid=self.PID, eventdays=[self.ed6])
 
         actual_dpts = self.evaluator.consolidate_decision_pts(self.timeline, [dpt1, dpt2])
         assert_equals(actual_dpts, [merged_dpt1, merged_dpt2])
@@ -111,7 +111,7 @@ class TestPatientTimelineEvaluator:
         return
 
     def test_target_eval_mr(self):
-        dpt1 = DecisionPoint(eventdays=[self.ed1, self.ed2])
+        dpt1 = DecisionPoint(patientid=self.PID, eventdays=[self.ed1, self.ed2])
         context = pte.PatientTimelineEvaluator.Context()
         context.add_eventday(self.ed4)
 
@@ -124,7 +124,7 @@ class TestPatientTimelineEvaluator:
                                                               self.INDEX_EPOCH,
                                                               self.INDEX_RELAPSE, 4, death_status=1)
         self.ed4.add_event(death_encounter)
-        dpt1 = DecisionPoint(eventdays=[self.ed1, self.ed2])
+        dpt1 = DecisionPoint(patientid=self.PID, eventdays=[self.ed1, self.ed2])
         context = pte.PatientTimelineEvaluator.Context()
         context.add_eventday(self.ed4)
 
@@ -133,7 +133,7 @@ class TestPatientTimelineEvaluator:
         assert_equals(expected, target)
 
     def test_target_eval_nr_and_tx_change(self):
-        dpt1 = DecisionPoint(eventdays=[self.ed1, self.ed2])
+        dpt1 = DecisionPoint(patientid=self.PID, eventdays=[self.ed1, self.ed2])
         context = pte.PatientTimelineEvaluator.Context()
         tx_change_enc =  self._make_encounter_with_timeshift(TreatmentEncounter, self.PID, self.EVENT_DATE_ONE,
                                                               self.INDEX_EPOCH,
@@ -146,7 +146,7 @@ class TestPatientTimelineEvaluator:
         assert_equals(expected, target)
 
     def test_target_eval_long_mrd_and_tx_change(self):
-        dpt1 = DecisionPoint(eventdays=[self.ed1, self.ed2])
+        dpt1 = DecisionPoint(patientid=self.PID, eventdays=[self.ed1, self.ed2])
         context = pte.PatientTimelineEvaluator.Context()
         tx_change_enc = self._make_encounter_with_timeshift(TreatmentEncounter, self.PID, self.EVENT_DATE_ONE,
                                                             self.INDEX_EPOCH,
