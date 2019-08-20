@@ -2,7 +2,7 @@ import itertools
 import logging
 
 from classes.event import gvhdencounter, relapseencounter, treatmentencounter, \
-                          vitalsencounter, demographicsencounter, ispencounter \
+                          vitalsencounter, demographicsencounter, ispencounter, \
                           graftrejectionencounter
 
 logger = logging.getLogger(__name__)

@@ -27,7 +27,7 @@ class GraftRejectionEncounter(Encounter):
 
 class GraftRejectionEncounterFactory(EncounterFactory):
     def __init__(self):
-        super(GraftRejectionEncounterrFactory, self).__init__(GraftRejectionEncounterEncounter)
+        super(GraftRejectionEncounterFactory, self).__init__(GraftRejectionEncounter)
 
     def translate_df_to_dict(self, df_row):
         row_dictionary = self._store_df_row(df_row)
