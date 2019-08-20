@@ -4,6 +4,7 @@
 		"URL": "https://cdsweb07.fhcrc.org/redcap/api/index.php?pid=450",
 		"API": "<API_TOKEN>"
 	},
+	"GATEWAY_DATA": "//CENTER/fh/secure/_HDC/Teams/Data-Science/AdaptiveTherapiesKrakow/9836_first_HCT_data.csv",
 	"HEADERS": ["PID", "numerics", "codes", "to_event", "target"],
 	"OUTPUT_FILEPATH": "./data",
 	"DEFAULT_VALUES":{
