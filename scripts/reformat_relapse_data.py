@@ -22,7 +22,7 @@ def pull_gateway_data(config):
     gateway_df = pd.read_csv(config['GATEWAY_DATA'])
     gateway_df['uwid'] = gateway_df['uwid'].map(lambda x: int(x.lstrip('U')))
     gateway_df = gateway_df.drop(columns = ['upn','txdatex', 'prexlbl', 'agvhday', \
-                                            'proplbl','hla_cco','birthdat','agvhdat',\
+                                            'don_drm', 'don_mat','birthdat','agvhdat',\
                                             'agvhgrd','agvhskn','agvhlvr','agvhgut'])
     return gateway_df
 
