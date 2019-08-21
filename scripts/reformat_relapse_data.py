@@ -60,7 +60,7 @@ def pull_from_red_cap(config):
     for patientid, event_days in patient_eds.items():
         timelines[patientid] = PatientTimeline(patientid, list(event_days.values()))
         decision_pts = evaluator.evaluate(timelines[patientid])
-        logger.info("number of decision points for patient {} on timeline: {}".format(patientid, timelines[patientid].decision_points))
+        logger.info("number of decision points for patient {} on timeline: {}".format(patientid, len(decision_pts)))
         timelines[patientid].decision_points = decision_pts
         logger.info("decision points for patient {} timeline: {}".format(patientid, timelines[patientid].decision_points))
         sum_dps += len(timelines[patientid].decision_points)
