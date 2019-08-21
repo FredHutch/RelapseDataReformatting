@@ -2,7 +2,7 @@ import itertools
 import logging
 
 from classes.event import gvhdencounter, relapseencounter, treatmentencounter, \
-                          vitalsencounter, demographicsencounter, ispencounter \
+                          vitalsencounter, demographicsencounter, ispencounter, \
                           graftrejectionencounter, gatewayencounter
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ INSTRUMENT_TO_FACTORY_MAP = {'treatment_event': treatmentencounter.TreatmentEnco
                              'response_or_relapse_event': relapseencounter.RelapseEncounterFactory,
                              'patient_id': demographicsencounter.DemographicsEncounterFactory,
                              'immunosuppression_kinetics': ispencounter.ISPEncounterFactory,
-                             'graft_rejection':graftrejectionencounter.GraftRejectionEncounterFactory
+                             'graft_rejection':graftrejectionencounter.GraftRejectionEncounterFactory,
                              'gateway_encounter': gatewayencounter.gatewayEncounterFactory
                              # primary_prophylaxis_against_relapse ?
                              # prehct1_treatment ?
