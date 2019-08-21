@@ -1,15 +1,30 @@
-from collections import defaultdict
 import json
 import logging
+from collections import defaultdict
+
+import pandas as pd
+from redcap import Project, RedcapError
+
 from classes import map_instrument_df_to_class
 from classes.collection.eventday import EventDay
 from classes.collection.patienttimeline import PatientTimeline
 from classes.evaluator.patienttimelineevaluator import PatientTimelineEvaluator
-from redcap import Project, RedcapError
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+def pull_gateway_data(config):
+    '''
+    pull gateway data related to hematapoetic cell transplant
+    from static csv
+    '''
+    gateway_df = pd.read_csv(config['GATEWAY_DATA'])
+    gateway_df['uwid'] = gateway_df['uwid'].map(lambda x: int(x.lstrip('U')))
+    gateway_df = gateway_df.drop(columns = ['upn','txdatex', 'prexlbl', 'agvhday', \
+                                            'don_drm', 'don_mat','birthdat','agvhdat',\
+                                            'agvhgrd','agvhskn','agvhlvr','agvhgut'])
+    return gateway_df
 
 def pull_from_red_cap(config):
     """
@@ -22,14 +37,17 @@ def pull_from_red_cap(config):
     patient_eds = defaultdict(dict)
 
     for form in project.forms:
+
         try:
             intermediate_df = project.export_records(forms=[form], format='df')
         except RedcapError:
             logger.warning("Failure to export records from REDCap for form: {}".format(form))
             continue
-
+        
         events = map_instrument_df_to_class(form, intermediate_df)
-
+        if form == 'patient_id': 
+            gateway_df = pull_gateway_data(config)
+            events += map_instrument_df_to_class('gateway_encounter', gateway_df)
         for event in events:
             if event.date not in patient_eds[event.patientid].keys():
                 patient_eds[event.patientid][event.date] = EventDay(event.patientid, event.date, event)
@@ -67,6 +85,7 @@ if __name__ == '__main__':
     import logging
     import logging.config
     import sys
+
     with open('../logging.yaml', 'r') as f:
         log_cfg = yaml.safe_load(f.read())
         log_cfg['handlers']['file']['filename'] = 'RelapseDataFormatting_{}.log'.format(dt.datetime.now().date())
