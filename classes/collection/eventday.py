@@ -165,7 +165,9 @@ class EventDay():
         """
         return sorted(list(itertools.chain(*[e.treatments for e in self.events])))
 
-
+    @property
+    def indications(self):
+        return set(e.indication for e in self.events)
 
 if __name__ == "__main__":
     import doctest
