@@ -11,17 +11,12 @@ data_dict_pkl_path = os.path.realpath('data_dict/data_dictionary.pkl')
 data_dict_csv_path = os.path.realpath('data_dict/data_dictionary.csv')
 categorical_feature_path = os.path.realpath('data_dict/categorical_features.csv')
 
-# Note: cmvx: '-/' Krakow is working on QA this field.
-# Other criteria:
-#   ## Create:
-#             - MaleDonor_Female_Recipient: if sex == 'Male' and donsex == 'Female', then 1; else: 0
-#             - Age vs. treatment count
-#             - Time to first relapse
-#             - % MRD vs. morph
 
 gateway_feature_recode_map = {'cmvx': {'-/-': 'neg_neg', '-/': 'neg_neg', '/': 'Unknown',
                                        '+/-': 'Others', '+/+': 'Others', '-/+': 'Others',
-                                       '+/': 'Others', '-/+': 'Others'},
+                                       '+/': 'Others', '-/+': 'Others',
+                                       # equivocal is considered as +
+                                       'equivocal/unknown': 'Unknown', 'equivocal/-': 'Other'},
                               'tbidose': {'0': 'le450', '200': 'le450', '300': 'le450', '450': 'le450',
                                           '1200': 'ge1200', '1320': 'ge1200'},
                               'proplbl': {

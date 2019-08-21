@@ -21,9 +21,11 @@ def pull_gateway_data(config):
     '''
     gateway_df = pd.read_csv(config['GATEWAY_DATA'])
     gateway_df['uwid'] = gateway_df['uwid'].map(lambda x: int(x.lstrip('U')))
+    gateway_df['female_donor_male_recipient'] = gateway_df.eval("donsex == 'Female' and sex == 'Male'").astype(int)
     gateway_df = gateway_df.drop(columns = ['upn','txdatex', 'prexlbl', 'agvhday', \
                                             'don_drm', 'don_mat','birthdat','agvhdat',\
-                                            'agvhgrd','agvhskn','agvhlvr','agvhgut'])
+                                            'agvhgrd','agvhskn','agvhlvr','agvhgut', \
+                                            'don1sex', 'don2sex', 'sex', 'donsex'])
     return gateway_df
 
 def pull_from_red_cap(config):
@@ -84,15 +86,15 @@ if __name__ == '__main__':
     import datetime as dt
     import logging
     import logging.config
-    import sys
+    import os
 
-    with open('../logging.yaml', 'r') as f:
+    with open(os.path.realpath('logging.yaml'), 'r') as f:
         log_cfg = yaml.safe_load(f.read())
         log_cfg['handlers']['file']['filename'] = 'RelapseDataFormatting_{}.log'.format(dt.datetime.now().date())
         logging.config.dictConfig(log_cfg)
     logger = logging.getLogger(__name__)
 
 
-    with open('../config.json') as fin:
+    with open(os.path.realpath('config.json')) as fin:
         config = json.load(fin)
     pull_from_red_cap(config)
