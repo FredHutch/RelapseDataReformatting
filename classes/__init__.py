@@ -16,7 +16,7 @@ INSTRUMENT_TO_FACTORY_MAP = {'treatment_event': treatmentencounter.TreatmentEnco
                              'patient_id': demographicsencounter.DemographicsEncounterFactory,
                              'immunosuppression_kinetics': ispencounter.ISPEncounterFactory,
                              'graft_rejection':graftrejectionencounter.GraftRejectionEncounterFactory
-                             'gatewayEncounter': gatewayencounter.gatewayEncounterFactory
+                             'gateway_encounter': gatewayencounter.gatewayEncounterFactory
                              # primary_prophylaxis_against_relapse ?
                              # prehct1_treatment ?
                              }
