@@ -19,7 +19,6 @@ class TreatmentEncounter(Encounter):
         self.days_since_hct = days_since_epoch
         self.rx_indication = kwargs.get('rx_indication', None)
         self.treatment_dict = dict()
-        self.treatment_dict.setdefault(None)
         self.set_treatments(**kwargs)
 
     def __repr__(self):
