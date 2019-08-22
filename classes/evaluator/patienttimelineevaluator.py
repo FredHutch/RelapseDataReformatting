@@ -167,7 +167,7 @@ class PatientTimelineEvaluator:
                 return "Death"
             if day.morphological_relapse():
                 return "Morphological Relapse"
-            if day.treatments != dpt.treatments and (
+            if any(treatment not in dpt.treatments for treatment in day.treatments) and (
                     {TreatmentEncounter.INDICATION_INDUCTION, TreatmentEncounter.INDICATION_MRD_TREATMENT} & day.indications):
                 return "Induction/MRD Indication + New Tx"
 
