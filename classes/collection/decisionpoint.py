@@ -55,6 +55,10 @@ class DecisionPoint:
         """
         return set(treatment for ed in self.eventdays for treatment in ed.treatments)
 
+    @property
+    def indications(self):
+        return set(indication for ed in self.eventdays for indication in ed.indications)
+
 
 if __name__ == '__main__':
     import doctest

@@ -6,11 +6,11 @@ from classes.event.encounter import Encounter, EncounterFactory
 logger = logging.getLogger(__name__)
 
 class TreatmentEncounter(Encounter):
-    INDUCTION = 1
-    MRD_TREATMENT = 2
-    CONSOLIDATION_CR = 3
-    MAINTENANCE_CR = 4
-    OTHER_INDICATION = 9
+    INDICATION_INDUCTION = 1
+    INDICATION_MRD_TREATMENT = 2
+    INDICATION_CONSOLIDATION_CR = 3
+    INDICATION_MAINTENANCE_CR = 4
+    INDICATION_OTHER_INDICATION = 9
 
     def __init__(self, patientid, date, start_date, days_since_epoch, days_since_relapse, **kwargs):
         super(TreatmentEncounter, self).__init__(patientid, date, "TreatmentEncounter", **kwargs)
@@ -19,8 +19,17 @@ class TreatmentEncounter(Encounter):
         self.days_since_hct = days_since_epoch
         self.rx_indication = kwargs.get('rx_indication', None)
         self.treatment_dict = dict()
-        self.treatment_dict.setdefault(None)
         self.set_treatments(**kwargs)
+
+    def __repr__(self):
+        base = super(TreatmentEncounter, self).__repr__()
+        treatment_str = "rx_indication: {ind} treatments: {td}".format(ind=self.rx_indication, td=self.treatment_dict)
+        return " ".join([base, treatment_str])
+
+    def __str__(self):
+        base = super(TreatmentEncounter, self).__str__()
+        treatment_str = "rx_indication: {ind} treatments: {td}".format(ind=self.rx_indication, td=self.treatment_dict)
+        return " ".join([base, treatment_str])
 
     def set_treatments(self, **kwargs):
         if not kwargs:
@@ -43,6 +52,10 @@ class TreatmentEncounter(Encounter):
     @property
     def treatments(self):
         return [k for k,v in self.treatment_dict.items() if v == 1]
+
+    @property
+    def indication(self):
+        return self.rx_indication
 
     def has_consolidation_maintenance(self):
         """
@@ -82,11 +95,11 @@ class TreatmentEncounter(Encounter):
         >>> encounter.is_decision_point()
         False
         >>> encounter.treatment_dict['induction_chemo'] = 1
-        >>> encounter.rx_indication = TreatmentEncounter.OTHER_INDICATION
+        >>> encounter.rx_indication = TreatmentEncounter.INDICATION_OTHER_INDICATION
         >>> encounter.is_decision_point()
         False
         >>> encounter.treatment_dict['induction_chemo'] = 1
-        >>> encounter.rx_indication = TreatmentEncounter.INDUCTION
+        >>> encounter.rx_indication = TreatmentEncounter.INDICATION_INDUCTION
         >>> encounter.is_decision_point()
         True
         """
@@ -101,7 +114,7 @@ class TreatmentEncounter(Encounter):
                         self.treatment_dict['hct'],
                         self.treatment_dict['other_np'],
                         self.treatment_dict['other_tcell_targeted']))
-               and self.rx_indication != TreatmentEncounter.OTHER_INDICATION)
+                and self.rx_indication != TreatmentEncounter.INDICATION_OTHER_INDICATION)
 
 class TreatmentEncounterFactory(EncounterFactory):
     """

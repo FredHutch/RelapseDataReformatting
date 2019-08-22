@@ -88,8 +88,20 @@ class Encounter():
             "the Dataframe supplied to Encounter {c} is invalid!: {df}".format(c=type(self).__name__, df=self.raw_df))
 
     @property
+    def existant_features(self):
+        """
+        return the subset of features that have tangible information for the encounter
+        :return:
+        """
+        return {k:v for k, v in self.features if not isnan(v)}
+
+    @property
     def treatments(self):
         return []
+
+    @property
+    def indication(self):
+        return None
 
     def is_decision_point(self):
         """

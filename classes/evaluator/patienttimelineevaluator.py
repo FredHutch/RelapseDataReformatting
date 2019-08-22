@@ -3,7 +3,8 @@ import logging
 from classes.collection.patienttimeline import PatientTimeline
 from classes.collection.eventday import EventDay
 from classes.collection.decisionpoint import DecisionPoint
-
+from classes.event.treatmentencounter import TreatmentEncounter
+from collections import defaultdict
 from typing import List
 
 logger = logging.getLogger(__name__)
@@ -15,6 +16,7 @@ class PatientTimelineEvaluator:
     This represents the first attempt at training evaluation (2019 JUL 29)
 
     """
+
     class Context:
         """
         keep track of previous decision points for determining target status
@@ -45,11 +47,22 @@ class PatientTimelineEvaluator:
         def mrd_relapse(self):
             return any(ed.mrd_relapse() for ed in self.event_days)
 
-    def __init__(self, timewindow: int, dpoint_eval_window: int):
-        self.target_timewindow = dt.timedelta(days=timewindow)
-        self.mrd_response_timewindow = dt.timedelta(days=365)
+    def __init__(self, induction_timewindow: int = 90, mrd_timewindow: int = 365,
+                 consolidation_timewindow: int = 365, dpoint_eval_window: int = 7):
+        self.induction_timewindow = dt.timedelta(days=induction_timewindow)
+        self.mrd_response_timewindow = dt.timedelta(days=mrd_timewindow)
+        self.consolidation_timewindow = dt.timedelta(days=consolidation_timewindow)
         self.decision_point_consolidation_window = dt.timedelta(days=dpoint_eval_window)
         self.context = self.Context()
+        self.INDUCTION_TO_EVALUATION_TIMEWINDOW = defaultdict(lambda: self.induction_timewindow,
+                                                              {
+                                                              TreatmentEncounter.INDICATION_INDUCTION: self.induction_timewindow,
+                                                              TreatmentEncounter.INDICATION_MRD_TREATMENT: self.mrd_response_timewindow,
+                                                              TreatmentEncounter.INDICATION_CONSOLIDATION_CR: self.consolidation_timewindow,
+                                                              TreatmentEncounter.INDICATION_MAINTENANCE_CR: self.consolidation_timewindow,
+                                                              TreatmentEncounter.INDICATION_OTHER_INDICATION: None,
+                                                              })
+
 
     def evaluate(self, timeline: PatientTimeline):
         ordered_days = timeline.get_sorted_events()
@@ -112,10 +125,10 @@ class PatientTimelineEvaluator:
         for dpt in decision_points:
             context = self.Context()
             target_days = timeline.get_events_after_date(dpt.eval_date)
-
+            evaluation_timewindow =  self.INDUCTION_TO_EVALUATION_TIMEWINDOW[self._most_relevant_indication(dpt.indications)]
             for target_day in target_days:
                 context.add_eventday(target_day)
-                cause = self.target_eval(dpt, target_day, context)
+                cause = self.target_eval(dpt, target_day, evaluation_timewindow, context)
                 if cause is not None:
                     logger.info(
                         "Decision Point Positive Label was found. PatientId: {pid} LabelDate: {dt} Decision Point: {dp}"
@@ -131,12 +144,13 @@ class PatientTimelineEvaluator:
                                                                                               dp=dpt))
                 dpt.label = False
 
-    def target_eval(self, dpt: DecisionPoint, day: EventDay, context: Context):
+    def target_eval(self, dpt: DecisionPoint, day: EventDay, evaluation_timewindow: dt.timedelta, context: Context):
         """
         Return a cause IFF occurs within the decision window:
             -the patient Died with the decision window
             -the patient relapsed within the decision window
-            -The patient had no response to the treatment AND
+            -The patient had no response to the treatment AND the Treatment regimen changes
+                 Krakow AUG20: change of treatment AND indication IS Treatment/ of MRD.
         or the following occurs within a year:
             -the patient relapsed from MRD within decision window AND there was a change in Tx within a year
         :param dpt:
@@ -144,22 +158,36 @@ class PatientTimelineEvaluator:
         :param context:
         :return: String Representation of positive label reason or None
         """
-
         time_window = day.date - dpt.eval_date
         logging.debug(
-            "DecisionPoint: {dp} Compared EventDay: {ed} Provided Context: {c}".format(dp=dpt, ed=day, c=context))
-        if time_window <= self.target_timewindow:
+            "DecisionPoint: {dp} Compared EventDay: {ed} Evaluation Time Window: {etw} Provided Context: {c}".format(
+                dp=dpt, ed=day, etw=evaluation_timewindow, c=context))
+        if time_window <= evaluation_timewindow:
             if day.died():
                 return "Death"
             if day.morphological_relapse():
                 return "Morphological Relapse"
-            if day.treatments != dpt.treatments:
-                return "No Response + New Tx"
-        if time_window <= self.mrd_response_timewindow:
-            if context.mrd_relapse() and day.treatments != dpt.treatments:
-                return "MRD Relapse + Tx Change"
+            if any(treatment not in dpt.treatments for treatment in day.treatments) and (
+                    {TreatmentEncounter.INDICATION_INDUCTION, TreatmentEncounter.INDICATION_MRD_TREATMENT} & day.indications):
+                return "Induction/MRD Indication + New Tx"
 
         return None
+
+    def _most_relevant_indication(self, indications):
+        priority_list = [TreatmentEncounter.INDICATION_INDUCTION,
+                           TreatmentEncounter.INDICATION_MRD_TREATMENT,
+                           TreatmentEncounter.INDICATION_CONSOLIDATION_CR,
+                           TreatmentEncounter.INDICATION_MAINTENANCE_CR,
+                           TreatmentEncounter.INDICATION_OTHER_INDICATION,
+                          ]
+
+        for indication in priority_list:
+            if indication in indications:
+                return indication
+
+        logger.warning("Alert! No valid Indication found in Indications: {ind} Returning Default".format(ind=indications))
+        return None
+
 
 
 
