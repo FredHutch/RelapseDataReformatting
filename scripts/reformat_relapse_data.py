@@ -1,15 +1,17 @@
 import json
 import logging
-from collections import defaultdict
-
 import pandas as pd
-from redcap import Project, RedcapError
+import os
 
+from collections import defaultdict
+from redcap import Project, RedcapError
 from classes import map_instrument_df_to_class
 from classes.collection.eventday import EventDay
 from classes.collection.patienttimeline import PatientTimeline
 from classes.evaluator.patienttimelineevaluator import PatientTimelineEvaluator
 
+
+import scripts.map_categorical_features as ddict
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -56,7 +58,8 @@ def pull_from_red_cap(config):
             else:
                 patient_eds[event.patientid][event.date].add_event(event)
 
-    evaluator = PatientTimelineEvaluator(timewindow=90, dpoint_eval_window=10)
+    evaluator = PatientTimelineEvaluator(induction_timewindow=90, mrd_timewindow=365,
+                                          consolidation_timewindow=365, dpoint_eval_window=7)
     timelines = dict()
     sum_dps = 0
     for patientid, event_days in patient_eds.items():
@@ -80,6 +83,11 @@ def pull_from_red_cap(config):
     tot_time_btw = sum([t.get_time_between_decision_points() for _,t in timelines.items()])
     logger.info("AVG Time between Decision Points in days: {num}/{den} = {avg}".format(num=tot_time_btw, den=sum_dps,
                                                                               avg=(tot_time_btw / sum_dps)))
+
+    data_dict_pkl_path = os.path.realpath(config["DATA_DICTIONARY"]["data_dict"])
+    data_dict_csv_path = os.path.realpath(config["DATA_DICTIONARY"]["data_dict_csv"])
+    categorical_feature_path = os.path.realpath(config["DATA_DICTIONARY"]["categorical_feature"])
+    data_dict = ddict.DataDictionary(data_dict_csv_path, data_dict_pkl_path)
 
 if __name__ == '__main__':
     import yaml
