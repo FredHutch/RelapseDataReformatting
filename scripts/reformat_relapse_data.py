@@ -42,9 +42,7 @@ def get_values(elements, lookups):
     """
     get value from lookup dictionary
     """
-    if not elements:
-        return None
-    elif isinstance(elements, float):
+    if isinstance(elements, float):
         if pd.isna(elements):
             return None
         return lookups.get(str(int(elements)))
