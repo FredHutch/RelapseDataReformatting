@@ -29,6 +29,11 @@ def pull_gateway_data(config):
     gateway_df['female_donor_male_recipient'] = gateway_df.eval("donsex == 'Female' and sex == 'Male'").astype(int)
     # recode features
     gateway_df = recode_features(gateway_df, gateway_feature_recode_map)
+    gateway_df = pd.get_dummies(gateway_df,prefix=['cmvx','hla_cco','tbidose','celltxl'], \
+                                columns = ['cmvx','hla_cco','tbidose','celltxl'])
+    # one-hot encode proplbl
+    proplbl = gateway_df.proplbl.str.split(r'\s*,\s*', expand=True).apply(pd.Series.value_counts, 1).fillna(0, downcast='infer').add_prefix('proplbl_')
+    gateway_df = pd.concat([gateway_df.drop(['proplbl'], axis=1), proplbl], axis=1, sort=False)
     gateway_df = gateway_df.drop(columns = ['upn','txdatex', 'prexlbl', 'agvhday', \
                                             'don_drm', 'don_mat','birthdat','agvhdat',\
                                             'agvhgrd','agvhskn','agvhlvr','agvhgut', \
@@ -52,7 +57,7 @@ def get_values(elements, lookups):
         elif len(elements.split(',')) > 1:
             element_parts = elements.split(',')
             new_list = [lookups.get(i) for i in element_parts if lookups.get(i)]
-            return ','.join(new_list)
+            return ','.join(set(new_list))
     else:
         return None
 
