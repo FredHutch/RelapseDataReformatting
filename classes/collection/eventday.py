@@ -1,4 +1,5 @@
 import itertools
+from collections import ChainMap
 
 class EventDay():
     def __init__(self, patientid, date, *events):
@@ -19,7 +20,6 @@ class EventDay():
                                                                d=self.date,
                                                                e=self.events)
 
-
     def add_event(self, event):
         """
         Add a new Event to the collection of events for the EventDay's given date and patient
@@ -32,11 +32,11 @@ class EventDay():
         >>> pid = 12345
         >>> dt = datetime.now()
         >>> ed = EventDay(pid, dt)
-        >>> e1 = Encounter(pid, dt, "Dummy")
+        >>> e1 = Encounter(pid, dt, days_since_epoch=3, days_since_relapse=2)
         >>> ed.add_event(e1)
         >>> ed.events[0] == e1
         True
-        >>> e2 = Encounter(pid+1, dt, "Dummy")
+        >>> e2 = Encounter(pid+1, dt, days_since_epoch=3, days_since_relapse=2)
         >>> ed.add_event(e2)
         Traceback (most recent call last):
             ...
@@ -80,7 +80,7 @@ class EventDay():
         >>> pid = 12345
         >>> dt = datetime.now()
         >>> ed = EventDay(pid, dt)
-        >>> e1 = Encounter(pid, dt, "Dummy")
+        >>> e1 = Encounter(pid, dt, days_since_epoch=3, days_since_relapse=2)
         >>> ed.add_event(e1)
         >>> ed.morphological_relapse()
         False
@@ -106,7 +106,7 @@ class EventDay():
         >>> pid = 12345
         >>> dt = datetime.now()
         >>> ed = EventDay(pid, dt)
-        >>> e1 = Encounter(pid, dt, "Dummy")
+        >>> e1 = Encounter(pid, dt, days_since_epoch=3, days_since_relapse=2)
         >>> ed.add_event(e1)
         >>> ed.mrd_relapse()
         False
@@ -121,6 +121,17 @@ class EventDay():
         """
         return any(e.is_relapse() and e.is_mrd_relapse() for e in self.events)
 
+    @property
+    def days_since_epoch(self):
+        if self.events:
+            return self.events[0].days_since_epoch
+        return None
+
+    @property
+    def days_since_relapse(self):
+        if self.events:
+            return self.events[0].days_since_relapse
+        return None
 
     @property
     def features(self):
@@ -134,7 +145,7 @@ class EventDay():
         >>> pid = 12345
         >>> dt = datetime.now()
         >>> ed = EventDay(pid, dt)
-        >>> e1 = TreatmentEncounter(date=dt, patientid=pid, days_since_epoch=3, days_since_relapse=2)
+        >>> e1 = TreatmentEncounter(pid, date=dt, start_date=dt,  days_since_epoch=3, days_since_relapse=2)
         >>> ed.add_event(e1)
         >>> e2 = RelapseEncounter(pid, dt, 3, 2, relapse_or_response=1, relapse_presentation=1)
         >>> ed.add_event(e2)
@@ -142,6 +153,27 @@ class EventDay():
         []
         """
         return sorted(list(itertools.chain(*[e.features for e in self.events])))
+
+    @property
+    def existant_features(self):
+        """
+        Get the list of relevant features for the event day
+
+        :return:
+        >>> from datetime import datetime
+        >>> from classes.event.treatmentencounter import TreatmentEncounter
+        >>> from classes.event.relapseencounter import RelapseEncounter
+        >>> pid = 12345
+        >>> dt = datetime.now()
+        >>> ed = EventDay(pid, dt)
+        >>> e1 = TreatmentEncounter(pid, date=dt, start_date=dt,  days_since_epoch=3, days_since_relapse=2)
+        >>> ed.add_event(e1)
+        >>> e2 = RelapseEncounter(pid, dt, 3, 2, relapse_or_response=1, relapse_presentation=1)
+        >>> ed.add_event(e2)
+        >>> ed.existant_features
+        {}
+        """
+        return {k:v for e in self.events for k,v in e.existant_features.items()}
 
     @property
     def treatments(self):
@@ -155,7 +187,7 @@ class EventDay():
         >>> pid = 12345
         >>> dt = datetime.now()
         >>> ed = EventDay(pid, dt)
-        >>> e1 = TreatmentEncounter(date=dt, patientid=pid, days_since_epoch=3, days_since_relapse=2)
+        >>> e1 = TreatmentEncounter(pid, date=dt, start_date=dt,  days_since_epoch=3, days_since_relapse=2)
         >>> e1.treatment_dict['hydroxyurea'] = 1
         >>> ed.add_event(e1)
         >>> e2 = RelapseEncounter(pid, dt, 3, 1, relapse_or_response=1, relapse_presentation=1)

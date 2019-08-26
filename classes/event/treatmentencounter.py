@@ -13,10 +13,8 @@ class TreatmentEncounter(Encounter):
     INDICATION_OTHER_INDICATION = 9
 
     def __init__(self, patientid, date, start_date, days_since_epoch, days_since_relapse, **kwargs):
-        super(TreatmentEncounter, self).__init__(patientid, date, "TreatmentEncounter", **kwargs)
-        self.days_since_relapse = days_since_relapse
+        super(TreatmentEncounter, self).__init__(patientid, date, days_since_epoch, days_since_relapse, **kwargs)
         self.start_date = self._date_coercion(start_date)
-        self.days_since_hct = days_since_epoch
         self.rx_indication = kwargs.get('rx_indication', None)
         self.treatment_dict = dict()
         self.set_treatments(**kwargs)

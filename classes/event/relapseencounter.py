@@ -10,10 +10,7 @@ class RelapseEncounter(Encounter):
     MRD_PRESENTATION = 3
 
     def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
-        super(RelapseEncounter, self).__init__(patientid, date, "RelapseEncounter", **kwargs)
-        self.days_since_epoch = days_since_epoch
-        self.days_since_relapse = days_since_relapse
-
+        super(RelapseEncounter, self).__init__(patientid, date, days_since_epoch, days_since_relapse, **kwargs)
         self.event_type = kwargs.get('relapse_or_response', None)
         self.relapse_presentation = kwargs.get('relapse_presentation', None)
         self.cr_depth = kwargs.get('cr_depth', None)

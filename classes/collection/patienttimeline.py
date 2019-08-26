@@ -34,12 +34,21 @@ class PatientTimeline:
 
     def get_events_after_date(self, date: datetime):
         """
-        return list of event days that occur on or after a given date
+        return list of event days that occur after a given date
         :param date:
         :return: self.event_days with date > param date
         """
         sorted_days = sorted(self.event_days, key=lambda x: x.date)
         return  [ed for ed in sorted_days if ed.date > date]
+
+    def get_events_before_date(self, date: datetime):
+        """
+        return list of event days that occur before or on a given date
+        :param date:
+        :return: self.event_days with date <= param date
+        """
+        sorted_days = sorted(self.event_days, key=lambda x: x.date)
+        return  [ed for ed in sorted_days if ed.date <= date]
 
     def get_events_in_range(self, beginningdate: datetime, enddate: datetime):
         """

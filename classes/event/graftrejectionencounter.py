@@ -2,10 +2,7 @@ from classes.event.encounter import Encounter, EncounterFactory
 
 class GraftRejectionEncounter(Encounter):
     def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
-        super(GraftRejectionEncounter, self).__init__(patientid, date, "GraftRejectionEncounter")
-        self.days_since_epoch = days_since_epoch
-        self.days_since_relapse = days_since_relapse
-
+        super(GraftRejectionEncounter, self).__init__(patientid, date, days_since_epoch, days_since_relapse)
         self.chim3_dnr1 = kwargs.get('chim3_dnr1', None)
         self.chim33_dnr2 = kwargs.get('chim33_dnr2', None)
         self.chim33_dnr3 = kwargs.get('chim33_dnr3', None)

@@ -3,10 +3,7 @@ from classes.event.encounter import Encounter, EncounterFactory
 
 class VitalsEncounter(Encounter):
     def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
-        super(VitalsEncounter, self).__init__(patientid, date, "VitalsEncounter", **kwargs)
-        self.days_since_epoch = days_since_epoch
-        self.days_since_relapse = days_since_relapse
-
+        super(VitalsEncounter, self).__init__(patientid, date, days_since_epoch, days_since_relapse, **kwargs)
         self.death_status = kwargs.get('death_status', None)
         self.status_at_death = kwargs.get('status_at_death', None)
         self.status_last_alive = kwargs.get('status_last_alive', None)

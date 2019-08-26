@@ -3,12 +3,9 @@ from classes.event.encounter import Encounter, EncounterFactory
 
 class ISPEncounter(Encounter):
     def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
-        super(ISPEncounter, self).__init__(patientid, date, "ISPEncounter")
-        self.days_since_epoch = days_since_epoch
-        self.days_since_relapse = days_since_relapse
-
+        super(ISPEncounter, self).__init__(patientid, date, days_since_epoch, days_since_relapse, **kwargs)
         self.e_isp = kwargs.get('isp_type', None)
-        self.w_isp_stop = kwargs.get('w_isp_stop', None)
+        self.w_isp_stop = kwargs.get('isp_stop_reason', None)
 
     def is_decision_point(self):
         """
