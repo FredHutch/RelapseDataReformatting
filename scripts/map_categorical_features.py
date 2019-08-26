@@ -27,7 +27,7 @@ gateway_feature_recode_map = {'cmvx': {'-/-': 'neg_neg', '-/': 'neg_neg', '/': '
                                   '[MYCOPHENOLATESODIUM]': 'MMF',
                                   'CY': 'Post-Transplant_Cyclophosphamide',
                                   'PTCY': 'Post-Transplant_Cyclophosphamide',
-                                  'STEROIDS': '', # ignore STEROIDS
+                                  'STEROIDS': 'STEROIDS', # ignore STEROIDS
                                   'MTX': 'MTX'
                               },
                               'hla_cco': {'ISO/MATCHED': 'REL/MATCHED',
@@ -42,7 +42,7 @@ gateway_feature_recode_map = {'cmvx': {'-/-': 'neg_neg', '-/': 'neg_neg', '/': '
 
 
 class DataDictionary():
-    def __init__(self, default_datadict=None, default_codes=None):
+    def __init__(self, data_dict_csv_path=None, data_dict_pkl_path=None):
         self.code_cols = {}
         self.numeric_cols = []
         self.drop_cols = []
