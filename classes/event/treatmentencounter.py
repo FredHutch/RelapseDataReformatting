@@ -13,10 +13,8 @@ class TreatmentEncounter(Encounter):
     INDICATION_OTHER_INDICATION = 9
 
     def __init__(self, patientid, date, start_date, days_since_epoch, days_since_relapse, **kwargs):
-        super(TreatmentEncounter, self).__init__(patientid, date, "TreatmentEncounter", **kwargs)
-        self.days_since_relapse = days_since_relapse
+        super(TreatmentEncounter, self).__init__(patientid, date, days_since_epoch, days_since_relapse, **kwargs)
         self.start_date = self._date_coercion(start_date)
-        self.days_since_hct = days_since_epoch
         self.rx_indication = kwargs.get('rx_indication', None)
         self.treatment_dict = dict()
         self.set_treatments(**kwargs)
@@ -66,7 +64,7 @@ class TreatmentEncounter(Encounter):
 
             0 Otherwise
         per Krakow JUL 30: use rx_indication to determine consolidation or maintenance instead
-        >>> encounter = TreatmentEncounter(date="7-11-2019", patientid=123, days_since_epoch=3, days_since_relapse=2)
+        >>> encounter = TreatmentEncounter(date="2019-07-11", start_date="2019-07-11", patientid=123, days_since_epoch=3, days_since_relapse=2)
         >>> encounter.has_consolidation_maintenance()
         False
         >>> encounter.treatment_dict['hydroxyurea'] = 1
@@ -88,7 +86,7 @@ class TreatmentEncounter(Encounter):
         per Krakow JUL30:
             an 'Other' rx_indication should not be considered for a decision point
         :return:
-        >>> encounter = TreatmentEncounter(date="7-11-2019", patientid=123, days_since_epoch=3, days_since_relapse=2)
+        >>> encounter = TreatmentEncounter(date="2019-07-11", start_date="2019-07-11", patientid=123, days_since_epoch=3, days_since_relapse=2)
         >>> encounter.is_decision_point()
         False
         >>> encounter.treatment_dict['induction_chemo'] = 0
@@ -127,7 +125,7 @@ class TreatmentEncounterFactory(EncounterFactory):
     ... 'days_hct1_to_tx': [3],
     ... 'days_index_relapse_to_tx': [2],
     ... 'e_treatment__1': [0],
-    ... 'e_treatment__2':  [0],
+    ... 'e_treatment__2': [0],
     ... 'e_treatment__3': [0],
     ... 'e_treatment__4': [0],
     ... 'e_treatment__5': [0],
@@ -140,9 +138,9 @@ class TreatmentEncounterFactory(EncounterFactory):
     ... 'e_treatment__12': [0],
     ... 'e_treatment__14': [None],
     ...  })
-    >>> encounter = factory.make_encounters(df)
+    >>> encounter = factory.make_encounters(patientid=12345, events_df=df)
     >>> print(encounter)
-    [TreatmentEncounter instance: patientid: 12345 date: 2019-07-29 type: TreatmentEncounter]
+    [TreatmentEncounter instance: patientid: 12345 date: 2019-07-29 00:00:00 type: TreatmentEncounter rx_indication: None treatments: {'induction_chemo': None, 'consolidation_chemo': None, 'hydroxyurea': None, 'intrathecal_therapy': None, 'radiation': None, 'hypomethylating': None, 'targeted': None, 'checkpoint_inhibitors': None, 'cytokine': None, 'cli': None, 'hct': None, 'other_np': None, 'palliative_chemo': None, 'other_tcell_targeted': None}]
     """
     def __init__(self):
         super(TreatmentEncounterFactory, self).__init__(TreatmentEncounter)
@@ -151,7 +149,7 @@ class TreatmentEncounterFactory(EncounterFactory):
         df_row = self._add_subjectid_to_df(df_row, pid)
         df_row = self._add_start_date_to_df(df_row)
         delta = 1
-        if not pd.isna(df_row['w_target_stop']):
+        if not pd.isna(df_row.get('w_target_stop', None)):
             msg = "ALERT! Multi-day treatment event found for PatientId {pid}. " \
                   "Splitting into multiple TreatmentEncounter objects. start: {start} stop: {stop}".format(
                 pid=pid, start=df_row['date_treatment'], stop=df_row['w_target_stop'])
@@ -172,6 +170,8 @@ class TreatmentEncounterFactory(EncounterFactory):
 
     def _add_start_date_to_df(self, df):
         df['start_date'] = df['date_treatment']
+        if type(df['date_treatment']) is pd.Timestamp:
+            df['start_date'] = pd.to_datetime(df['start_date'])
         return df
 
     def translate_df_to_dict(self, df_row):

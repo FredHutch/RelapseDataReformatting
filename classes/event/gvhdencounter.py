@@ -2,10 +2,7 @@ from classes.event.encounter import Encounter, EncounterFactory
 
 class GVHDEncounter(Encounter):
     def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
-        super(GVHDEncounter, self).__init__(patientid, date, "GVHDEncounter", **kwargs)
-        self.days_since_epoch = days_since_epoch
-        self.days_since_relapse = days_since_relapse
-
+        super(GVHDEncounter, self).__init__(patientid, date, days_since_epoch, days_since_relapse, **kwargs)
         self.gvhd_type = kwargs.get('gvhd_type', None)
         self.acute_gvhd_grade = kwargs.get('acute_gvhd_grade', None)
         self.chronic_gvhd_severity = kwargs.get('chronic_gvhd_severity', None)
@@ -32,7 +29,7 @@ class GVHDEncounterFactory(EncounterFactory):
         row_dictionary['date'] = df_row.get('date_gvhd', None)
         row_dictionary['patientid'] = df_row.get('subject_id', None)
         row_dictionary['days_since_epoch'] = df_row.get('days_hct1_gvhd', None)
-        row_dictionary['days_since_relapse'] = df_row.get('days_index_relapse_to_gvhd', None)
+        row_dictionary['days_since_relapse'] = df_row.get('days_index_rel_to_gvhd', None)
         row_dictionary['gvhd_type'] = df_row.get('e_gvhd', None)
         row_dictionary['acute_gvhd_grade'] = df_row.get('w_sub_agvh_grade', None)
         row_dictionary['chronic_gvhd_severity'] = df_row.get('w_sub_cgvh_severity', None)
