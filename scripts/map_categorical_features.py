@@ -55,11 +55,12 @@ gateway_feature_to_integer = {'cmvx': {'neg_neg': 1, 'Others': 2, 'Unknown': 3},
                               }
 
 class DataDictionary():
-    def __init__(self, default_datadict=None, default_codes=None):
+    def __init__(self, data_dict_csv_path, data_dict_pkl_path, categorical_feature_path):
         self.code_cols = {}
         self.numeric_cols = []
         self.drop_cols = []
         self.code_mappings = {}
+        self.categorical_feature_path = categorical_feature_path
         self.read_data_dict(data_dict_csv_path)
         self.read_code_mapping(data_dict_pkl_path)
 
@@ -79,6 +80,25 @@ class DataDictionary():
             code_map = pickle.load(fin)
         self.code_mappings = {v:k for k,v in code_map.items()}
 
+    def one_hot_encoding(self, feature):
+        '''
+        One-hot encoding, and rename categorical features
+        :feature: dict {name: val}, e.g., {feature: 3}
+        :categorical_feature_mapping: csv file with categorical features
+        :return: new feature name, e.g., feature_3
+        '''
+
+        # create dict for categorical features, {feature: n_total_levels}
+        cat_name = {}
+        with open(self.categorical_feature_path, "r") as fin:
+            reader = csv.DictReader(fin)
+            for row in reader:
+                cat_name[row['Name']] = row['N']
+
+        (name, val), = feature.items()
+
+        if cat_name.get(name):
+            return '{}_{}'.format(name, val)
 
 def map_codes_to_ints(datadict = data_dict_csv_path, outpath = data_dict_pkl_path):
     '''
@@ -99,22 +119,3 @@ def map_codes_to_ints(datadict = data_dict_csv_path, outpath = data_dict_pkl_pat
     with open(outpath, 'wb') as code_map:
         pickle.dump(code_d, code_map)
 
-def one_hot_encoding(feature, categorical_feature_mapping = categorical_feature_path):
-    '''
-    One-hot encoding, and rename categorical features
-    :feature: dict {name: val}, e.g., {feature: 3}
-    :categorical_feature_mapping: csv file with categorical features
-    :return: new feature name, e.g., feature_3
-    '''
-
-    # create dict for categorical features, {feature: n_total_levels}
-    cat_name = {}
-    with open(categorical_feature_mapping, "r") as fin:
-        reader = csv.DictReader(fin)
-        for row in reader:
-            cat_name[row['Name']] = row['N']
-
-    (name, val), = feature.items()
-
-    if cat_name.get(name):
-        return '{}_{}'.format(name, val)

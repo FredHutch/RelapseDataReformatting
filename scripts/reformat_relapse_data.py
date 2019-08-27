@@ -9,6 +9,7 @@ from classes import map_instrument_df_to_class
 from classes.collection.eventday import EventDay
 from classes.collection.patienttimeline import PatientTimeline
 from classes.evaluator.patienttimelineevaluator import PatientTimelineEvaluator
+from classes.evaluator.trainingrowevaluator import TrainingRowEvaluator
 
 
 import scripts.map_categorical_features as ddict
@@ -87,7 +88,19 @@ def pull_from_red_cap(config):
     data_dict_pkl_path = os.path.realpath(config["DATA_DICTIONARY"]["data_dict"])
     data_dict_csv_path = os.path.realpath(config["DATA_DICTIONARY"]["data_dict_csv"])
     categorical_feature_path = os.path.realpath(config["DATA_DICTIONARY"]["categorical_feature"])
-    data_dict = ddict.DataDictionary(data_dict_csv_path, data_dict_pkl_path)
+    data_dict = ddict.DataDictionary(data_dict_csv_path, data_dict_pkl_path, categorical_feature_path)
+    training_translator = TrainingRowEvaluator()
+
+    all_rows = []
+    for pid, timeline in timelines.items():
+        try:
+            pid_train_rows = training_translator.evaluate_timeline_for_training_rows(timeline, data_dict)
+            all_rows.extend(pid_train_rows)
+        except AttributeError as e:
+            msg = "Alert! An Error occurred while translating Patient Id: {id} Timeline: {err}".format(id=pid, err=e)
+            logger.warning(msg)
+
+    logger.info("{num} Training rows created from timelines.".format(num=len(all_rows)))
 
 if __name__ == '__main__':
     import yaml
@@ -96,13 +109,13 @@ if __name__ == '__main__':
     import logging.config
     import os
 
-    with open(os.path.realpath('logging.yaml'), 'r') as f:
+    with open(os.path.realpath('../logging.yaml'), 'r') as f:
         log_cfg = yaml.safe_load(f.read())
         log_cfg['handlers']['file']['filename'] = 'RelapseDataFormatting_{}.log'.format(dt.datetime.now().date())
         logging.config.dictConfig(log_cfg)
     logger = logging.getLogger(__name__)
 
 
-    with open(os.path.realpath('config.json')) as fin:
+    with open(os.path.realpath('../config.json')) as fin:
         config = json.load(fin)
     pull_from_red_cap(config)
