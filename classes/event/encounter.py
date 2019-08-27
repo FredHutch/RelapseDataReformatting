@@ -95,7 +95,7 @@ class Encounter():
         return the subset of features that have tangible information for the encounter
         :return:
         """
-        return {k:v for k,v in self.features.items() if type(v) is not str or ((type(v) is float or type(v) is int) and not isnan(v))}
+        return {k:v for k,v in self.features.items() if type(v) in [float, int, not str] and not isnan(v)}
 
     @property
     def treatments(self):

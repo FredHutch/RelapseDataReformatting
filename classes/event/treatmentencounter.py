@@ -170,7 +170,8 @@ class TreatmentEncounterFactory(EncounterFactory):
 
     def _add_start_date_to_df(self, df):
         df['start_date'] = df['date_treatment']
-        df['start_date'] = pd.to_datetime(df['start_date'])
+        if type(df['date_treatment']) is pd.Timestamp:
+            df['start_date'] = pd.to_datetime(df['start_date'])
         return df
 
     def translate_df_to_dict(self, df_row):
