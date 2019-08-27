@@ -137,6 +137,7 @@ def pull_from_red_cap(config):
     training_translator = TrainingRowEvaluator()
 
     all_rows = []
+    attr_errs = 0
     for pid, timeline in timelines.items():
         try:
             pid_train_rows = training_translator.evaluate_timeline_for_training_rows(timeline, data_dict)
@@ -144,8 +145,11 @@ def pull_from_red_cap(config):
         except AttributeError as e:
             msg = "Alert! An Error occurred while translating Patient Id: {id} Timeline: {err}".format(id=pid, err=e)
             logger.warning(msg)
+            attr_errs += 1
 
     logger.info("{num} Training rows created from timelines.".format(num=len(all_rows)))
+    logger.info("{num} Timelines had no training rows.".format(num=attr_errs))
+
 
 if __name__ == '__main__':
     import yaml
@@ -156,9 +160,8 @@ if __name__ == '__main__':
 
     with open(os.path.realpath('../logging.yaml'), 'r') as f:
         log_cfg = yaml.safe_load(f.read())
-        log_cfg['handlers']['file']['filename'] = 'RelapseDataFormatting_{}.log'.format(dt.datetime.now().date())
         logging.config.dictConfig(log_cfg)
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger()
 
 
     with open(os.path.realpath('../config.json')) as fin:
