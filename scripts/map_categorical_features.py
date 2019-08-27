@@ -6,12 +6,6 @@ import os
 import csv
 import pickle
 
-# these file paths will be move to a common file eventually
-data_dict_pkl_path = os.path.realpath('data_dict/data_dictionary.pkl')
-data_dict_csv_path = os.path.realpath('data_dict/data_dictionary.csv')
-categorical_feature_path = os.path.realpath('data_dict/categorical_features.csv')
-
-
 gateway_feature_recode_map = {'cmvx': {'-/-': 'neg_neg', '-/': 'neg_neg', '/': 'Unknown',
                                        '+/-': 'Others', '+/+': 'Others', '-/+': 'Others',
                                        '+/': 'Others', '-/+': 'Others',
@@ -33,7 +27,7 @@ gateway_feature_recode_map = {'cmvx': {'-/-': 'neg_neg', '-/': 'neg_neg', '/': '
                                   '[MYCOPHENOLATESODIUM]': 'MMF',
                                   'CY': 'Post-Transplant_Cyclophosphamide',
                                   'PTCY': 'Post-Transplant_Cyclophosphamide',
-                                  'STEROIDS': '', # ignore STEROIDS
+                                  'STEROIDS': 'STEROIDS', # ignore STEROIDS
                                   'MTX': 'MTX'
                               },
                               'hla_cco': {'ISO/MATCHED': 'REL/MATCHED',
@@ -46,16 +40,9 @@ gateway_feature_recode_map = {'cmvx': {'-/-': 'neg_neg', '-/': 'neg_neg', '/': '
                                           'URD/MATCHED': 'URD/MATCHED',
                                           'URD/MISMATCH': 'URD/MISMATCH'}}
 
-gateway_feature_to_integer = {'cmvx': {'neg_neg': 1, 'Others': 2, 'Unknown': 3},
-                              'proplbl': {'CNI': 1, 'RAPA': 2, 'MMF': 3, 'CY': 4, 'MTX': 5},
-                              'hla_cco': {'REL/MATCHED': 1, 'REL/MISMATCH': 2, 'REL/HAPLOIDENTICAL': 3,
-                                          'RD/CORD': 4, 'URD/MATCHED': 5, 'URD/MISMATCH': 6},
-                              'tbidose': {'le450': 1, 'ge1200': 2},
-                              'celltxl': {'PBSC': 1, 'BM': 2, 'CORD': 3}
-                              }
 
 class DataDictionary():
-    def __init__(self, default_datadict=None, default_codes=None):
+    def __init__(self, data_dict_csv_path=None, data_dict_pkl_path=None):
         self.code_cols = {}
         self.numeric_cols = []
         self.drop_cols = []
@@ -80,11 +67,12 @@ class DataDictionary():
         self.code_mappings = {v:k for k,v in code_map.items()}
 
 
-def map_codes_to_ints(datadict = data_dict_csv_path, outpath = data_dict_pkl_path):
+def map_codes_to_ints(datadict, outpath):
     '''
     map one hot encoded features (binary) to integer feature names
     dump it to a pickle file
-    :param filepath: path of data_dictionary.csv
+    :param datadict: data_dict_csv_path
+    "param outpath: data_dict_pkl_path
     :return: pickle file with one hot encoded features,
              e,g, {1: feature1, 2: feature2, ...}
     '''
@@ -99,11 +87,11 @@ def map_codes_to_ints(datadict = data_dict_csv_path, outpath = data_dict_pkl_pat
     with open(outpath, 'wb') as code_map:
         pickle.dump(code_d, code_map)
 
-def one_hot_encoding(feature, categorical_feature_mapping = categorical_feature_path):
+def one_hot_encoding(feature, categorical_feature_mapping):
     '''
     One-hot encoding, and rename categorical features
     :feature: dict {name: val}, e.g., {feature: 3}
-    :categorical_feature_mapping: csv file with categorical features
+    :categorical_feature_mapping: categorical_feature_path
     :return: new feature name, e.g., feature_3
     '''
 
