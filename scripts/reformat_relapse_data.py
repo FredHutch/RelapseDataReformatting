@@ -32,7 +32,7 @@ def pull_gateway_data(config):
     gateway_df = pd.get_dummies(gateway_df,prefix=['cmvx','hla_cco','tbidose','celltxl'], \
                                 columns = ['cmvx','hla_cco','tbidose','celltxl'])
     # one-hot encode proplbl
-    proplbl = gateway_df.proplbl.str.strip().split(r'\s*,\s*', expand=True).apply(pd.Series.value_counts, 1).fillna(0, downcast='infer').add_prefix('proplbl_')
+    proplbl = gateway_df.proplbl.str.strip().str.split(r'\s*,\s*', expand=True).apply(pd.Series.value_counts, 1).fillna(0, downcast='infer').add_prefix('proplbl_')
     gateway_df = pd.concat([gateway_df.drop(['proplbl'], axis=1), proplbl], axis=1, sort=False)
     gateway_df = gateway_df.drop(columns = ['upn','txdatex', 'prexlbl', 'agvhday', \
                                             'don_drm', 'don_mat','birthdat','agvhdat',\
