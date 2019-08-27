@@ -30,7 +30,7 @@ class Encounter():
     @classmethod
     def _date_coercion(cls, check_date):
         if type(check_date) is pd.Timestamp:
-            return check_date.check_date()
+            return check_date
         elif type(check_date) is dt.datetime:
             return check_date
         elif type(check_date) is str:
@@ -70,11 +70,11 @@ class Encounter():
         >>> import datetime as dt
         >>> import pandas as pd
         >>> raw_df = pd.DataFrame({"pid": 123, "date":dt.datetime.strptime("7-11-2019", '%m-%d-%Y'), "cat":"meow"}, index=[0])
-        >>> enc = Encounter(123, dt.datetime.strptime("7-11-2019", '%m-%d-%Y') , 0, 0,  "dummy", raw_df=raw_df)
+        >>> enc = Encounter(123, dt.datetime.strptime("7-11-2019", '%m-%d-%Y') , 0, 0, raw_df=raw_df)
         >>> enc.features
         {'pid': 123, 'date': Timestamp('2019-07-11 00:00:00'), 'cat': 'meow'}
         >>> raw_df = {"pid": 456, "date":dt.datetime.strptime("7-11-2019", '%m-%d-%Y'), "dog":"bork"}
-        >>> enc = Encounter(456, dt.datetime.strptime("7-11-2019", '%m-%d-%Y') , 0, 0,  "dummy", raw_df=raw_df)
+        >>> enc = Encounter(456, dt.datetime.strptime("7-11-2019", '%m-%d-%Y') , 0, 0, raw_df=raw_df)
         >>> enc.features
         {'pid': 456, 'date': datetime.datetime(2019, 7, 11, 0, 0), 'dog': 'bork'}
         """

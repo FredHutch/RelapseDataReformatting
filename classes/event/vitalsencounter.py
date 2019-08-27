@@ -16,7 +16,7 @@ class VitalsEncounter(Encounter):
         Did the patient die as of this Vitals Encoutner date?
         :return: True if Dead
                  False otherwise
-        >>> encounter = VitalsEncounter(patientid=123, date="7-11-2019", days_since_epoch=3, days_since_relapse=2, death_status=2)
+        >>> encounter = VitalsEncounter(patientid=123, date="2019-07-11", days_since_epoch=3, days_since_relapse=2, death_status=2)
         >>> encounter.died()
         False
         >>> encounter.death_status = None
