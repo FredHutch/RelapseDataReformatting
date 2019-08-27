@@ -23,13 +23,13 @@ class TestDecisionPoint:
                               relapse_presentation=3)
         self.ed2 = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=1), event_days=[e2,e3])
 
-        e4 = TreatmentEncounter(self.PID, self.EVENT_DATE_ONE + timedelta(days=2), 3, 1, hydroxyurea=1, consolidation_chemo=1)
-        e5 = TreatmentEncounter(self.PID, self.EVENT_DATE_ONE + timedelta(days=2), 3, 1, hydroxyurea=1,
+        e4 = TreatmentEncounter(self.PID, self.EVENT_DATE_ONE + timedelta(days=2), self.EVENT_DATE_ONE + timedelta(days=2), 3, 1, hydroxyurea=1, consolidation_chemo=1)
+        e5 = TreatmentEncounter(self.PID, self.EVENT_DATE_ONE + timedelta(days=2), self.EVENT_DATE_ONE + timedelta(days=2), 3, 1, hydroxyurea=1,
                                 consolidation_chemo=1)
-        e6 = TreatmentEncounter(self.PID, self.EVENT_DATE_ONE + timedelta(days=3), 3, 1, cytokine=1)
+        e6 = TreatmentEncounter(self.PID, self.EVENT_DATE_ONE + timedelta(days=3), self.EVENT_DATE_ONE + timedelta(days=3), 3, 1, cytokine=1)
         self.ed3 = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=2), event_days=[e4, e5])
         self.ed4 = _make_event_day(self.PID, self.EVENT_DATE_ONE + timedelta(days=3), event_days=[e6])
-        self.dpt1 = DecisionPoint(eventdays=[])
+        self.dpt1 = DecisionPoint(patientid=self.PID, eventdays=[])
 
     def test_decisionpoint_evaldate(self):
         self.dpt1.add_event_day(self.ed1)
