@@ -13,6 +13,7 @@ from classes.evaluator.trainingrowevaluator import TrainingRowEvaluator
 
 
 import scripts.map_categorical_features as ddict
+from scripts.map_categorical_features import gateway_feature_recode_map
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -23,13 +24,57 @@ def pull_gateway_data(config):
     from static csv
     '''
     gateway_df = pd.read_csv(config['GATEWAY_DATA'])
+    # recode uwid
     gateway_df['uwid'] = gateway_df['uwid'].map(lambda x: int(x.lstrip('U')))
+    # define female_donor_male_recipient
     gateway_df['female_donor_male_recipient'] = gateway_df.eval("donsex == 'Female' and sex == 'Male'").astype(int)
+    # recode features
+    gateway_df = recode_features(gateway_df, gateway_feature_recode_map)
+    gateway_df = pd.get_dummies(gateway_df,prefix=['cmvx','hla_cco','tbidose','celltxl'], \
+                                columns = ['cmvx','hla_cco','tbidose','celltxl'])
+    # one-hot encode proplbl
+    proplbl = gateway_df.proplbl.str.strip().split(r'\s*,\s*', expand=True).apply(pd.Series.value_counts, 1).fillna(0, downcast='infer').add_prefix('proplbl_')
+    gateway_df = pd.concat([gateway_df.drop(['proplbl'], axis=1), proplbl], axis=1, sort=False)
     gateway_df = gateway_df.drop(columns = ['upn','txdatex', 'prexlbl', 'agvhday', \
                                             'don_drm', 'don_mat','birthdat','agvhdat',\
                                             'agvhgrd','agvhskn','agvhlvr','agvhgut', \
                                             'don1sex', 'don2sex', 'sex', 'donsex'])
     return gateway_df
+
+
+
+
+def get_values(elements, lookups):
+    """
+    get value from lookup dictionary
+    """
+    if isinstance(elements, float):
+        if pd.isna(elements):
+            return None
+        return lookups.get(str(int(elements)))
+    elif isinstance(elements, str):
+        if len(elements.split(',')) == 1:
+            return lookups.get(elements)
+        elif len(elements.split(',')) > 1:
+            element_parts = elements.split(',')
+            new_list = [lookups.get(i) for i in element_parts if lookups.get(i)]
+            return ','.join(set(new_list))
+    else:
+        return None
+
+def recode_features(df, lookups):
+    """
+    update column values in-place
+    :param df: pandas dataframe
+    :param lookups: dictionary
+    :return: None.
+    """
+    # columns to recode
+    cols = list(lookups.keys())
+    for col in cols:
+        df[col] = df[col].apply(lambda x: get_values(x, lookups[col]))
+    return df
+
 
 def pull_from_red_cap(config):
     """

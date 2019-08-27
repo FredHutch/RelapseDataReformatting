@@ -3,11 +3,8 @@ from classes.event.encounter import Encounter, EncounterFactory
 
 class ISPEncounter(Encounter):
     def __init__(self, patientid, date, days_since_epoch, days_since_relapse, **kwargs):
-        super(ISPEncounter, self).__init__(patientid, date, "ISPEncounter")
-        self.days_since_epoch = days_since_epoch
-        self.days_since_relapse = days_since_relapse
-
-        self.e_isp = kwargs.get('isp_type', None)
+        super(ISPEncounter, self).__init__(patientid, date, days_since_epoch, days_since_relapse, **kwargs)
+        self.e_isp = kwargs.get('e_isp', None)
         self.w_isp_stop = kwargs.get('w_isp_stop', None)
 
     def is_decision_point(self):
@@ -33,7 +30,7 @@ class ISPEncounterFactory(EncounterFactory):
         row_dictionary['patientid'] = df_row.get('subject_id', None)
         row_dictionary['days_since_epoch'] = df_row.get('days_hct1_to_ispact', None)
         row_dictionary['days_since_relapse'] = df_row.get('days_index_rel_to_ispact', None)
-        row_dictionary['isp_type'] = df_row.get('e_isp', None)
-        row_dictionary['isp_stop_reason'] = df_row.get('w_isp_stop', None)
+        row_dictionary['e_isp'] = df_row.get('e_isp', None)
+        row_dictionary['w_isp_stop'] = df_row.get('w_isp_stop', None)
 
         return row_dictionary
