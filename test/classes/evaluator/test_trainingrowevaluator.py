@@ -114,12 +114,7 @@ class TestTrainingRowEvaluator:
 
     def _make_data_dict(self):
         dd = DataDictionary()
-        dd.code_cols = {'w_mrd_type___1': ('Code', 'Binary', 'Time-Varying', 'Yes'),
-                         'wbc_know': ('Code', 'Binary', 'Time-Varying', 'Yes'),
-                         'pbblasts_known': ('Code', 'Binary', 'Time-Varying', 'Yes'),
-                         'bmblasts_known': ('Code', 'Binary', 'Time-Varying', 'Yes'),
-                         'extramed_type___1': ('Code', 'Binary', 'Time-Varying', 'Yes'),
-                         'e_treatment___2': ('Code', 'Binary', 'Time-Varying', 'Yes'),
+        dd.code_cols = { 'e_treatment___2': ('Code', 'Binary', 'Time-Varying', 'Yes'),
                          'e_treatment___3': ('Code', 'Binary', 'Time-Varying', 'Yes'),
                          'e_treatment___9': ('Code', 'Binary', 'Time-Varying', 'Yes'),
                          }
