@@ -42,15 +42,15 @@ gateway_feature_recode_map = {'cmvx': {'-/-': 'neg_neg', '-/': 'neg_neg', '/': '
 
 
 class DataDictionary():
-
-    def __init__(self, data_dict_csv_path, data_dict_pkl_path, categorical_feature_path):
+    def __init__(self, data_dict_csv_path=None, data_dict_pkl_path=None, categorical_feature_path=None):
         self.code_cols = {}
         self.numeric_cols = []
         self.drop_cols = []
-        self.code_mappings = {}
         self.categorical_feature_path = categorical_feature_path
-        self.read_data_dict(data_dict_csv_path)
-        self.read_code_mapping(data_dict_pkl_path)
+        if data_dict_csv_path is not None:
+            self.read_data_dict(data_dict_csv_path)
+        if data_dict_pkl_path is not None:
+            self.read_code_mapping(data_dict_pkl_path)
 
     def read_data_dict(self, filepath):
         with open(filepath, "r") as fin:

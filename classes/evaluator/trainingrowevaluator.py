@@ -66,12 +66,12 @@ class TrainingRowEvaluator:
 
     def create_condensed_row(self, pid, row_list, event_target):
         condensed_numerics, condensed_codes, condensed_days = self._make_wide_rows(row_list)
-        row = [{'PID': pid,
+        row = {'PID': pid,
                 'numerics': condensed_numerics,
                 'codes': condensed_codes,
                 'to_event': condensed_days,
                 'target': event_target
-                }]
+                }
 
         return row
 
