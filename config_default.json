@@ -11,6 +11,7 @@
 		"categorical_feature": "//CENTER/fh/secure/_HDC/Teams/Data-Science/AdaptiveTherapiesKrakow/data_dict/categorical_features.csv"},
 	"HEADERS": ["PID", "numerics", "codes", "to_event", "target"],
 	"OUTPUT_FILEPATH": "./data",
+	"TRAINING_DATAFRAME_NAME": "training_df",
 	"DEFAULT_VALUES":{
 		"X":0,
 		"Y":0,

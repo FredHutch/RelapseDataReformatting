@@ -150,20 +150,26 @@ def pull_from_red_cap(config):
     logger.info("{num} Training rows created from timelines.".format(num=len(all_rows)))
     logger.info("{num} Timelines had no training rows.".format(num=attr_errs))
 
+    training_df = pd.DataFrame(all_rows)
+    output_path = os.path.sep.join([config['OUTPUT_FILEPATH'], "".join([config['TRAINING_DATAFRAME_NAME'], ".pkl"])])
+    training_df.to_pickle(path=output_path)
+    logger.info("wrote training dataframe to output path: {o}".format(o=output_path))
+
 
 if __name__ == '__main__':
     import yaml
-    import datetime as dt
     import logging
     import logging.config
     import os
 
-    with open(os.path.realpath('../logging.yaml'), 'r') as f:
+    cd = os.path.dirname(os.path.realpath(__file__))
+    with open(os.path.join(cd, '../logging.yaml'), 'r') as f:
         log_cfg = yaml.safe_load(f.read())
         logging.config.dictConfig(log_cfg)
     logger = logging.getLogger()
+    config = dict()
+    for c in ['../config_default.json', '../config.json']:
+        with open(os.path.join(cd, c), 'r') as fin:
+            config.update(json.load(fin))
 
-
-    with open(os.path.realpath('../config.json')) as fin:
-        config = json.load(fin)
     pull_from_red_cap(config)
