@@ -155,7 +155,6 @@ def pull_from_red_cap(config):
     training_df.to_pickle(path=output_path)
     logger.info("wrote training dataframe to output path: {o}".format(o=output_path))
 
-
 if __name__ == '__main__':
     import yaml
     import logging
