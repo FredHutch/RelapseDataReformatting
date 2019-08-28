@@ -16,11 +16,7 @@
 		"X":0,
 		"Y":0,
 		"Z":0
-	},
-	"DATA_DICTIONARY":{
-		"data_dict":"data_dict/data_dictionary.pkl",
-		"data_dict_csv": "data_dict/data_dictionary.csv",
-		"categorical_feature": "data_dict/categorical_features.csv"
+	}
 	}
 
 }
