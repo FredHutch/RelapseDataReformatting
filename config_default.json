@@ -22,6 +22,5 @@
 		"data_dict_csv": "data_dict/data_dictionary.csv",
 		"categorical_feature": "data_dict/categorical_features.csv"
 	}
-	}
 
 }
