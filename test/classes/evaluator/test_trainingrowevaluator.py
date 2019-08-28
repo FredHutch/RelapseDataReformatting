@@ -121,7 +121,7 @@ class TestTrainingRowEvaluator:
                          'extramed_type___1': ('Code', 'Binary', 'Time-Varying', 'Yes'),
                          'e_treatment___2': ('Code', 'Binary', 'Time-Varying', 'Yes'),
                          'e_treatment___3': ('Code', 'Binary', 'Time-Varying', 'Yes'),
-                         'e_treatment___9': ('Code', 'Binary', 'Time-Varying', 'Yes')
+                         'e_treatment___9': ('Code', 'Binary', 'Time-Varying', 'Yes'),
                          }
 
         dd.code_mappings = {'w_mrd_type___1': 1,
@@ -133,7 +133,8 @@ class TestTrainingRowEvaluator:
                             }
 
         dd.drop_cols = ['subject_id']
-        dd.numeric_cols = ['wbc']
+        dd.numeric_cols = ['relapse_or_response',
+                           'relapse_presentation']
 
         return dd
 
@@ -153,9 +154,9 @@ class TestTrainingRowEvaluator:
         dpt3.label = False
         self.timeline.decision_points = [dpt1, dpt2, dpt3]
 
-        expected = [[{'PID': 12345, 'numerics': [[None], [None]], 'codes': [[], []], 'to_event': [1, 3], 'target': 1}],
-                    [{'PID': 12345, 'numerics': [[None], [None], [None], [None], [None]], 'codes': [[], [], [], [], []], 'to_event': [1, 3, 4, 5, 6], 'target': 1}],
-                    [{'PID': 12345, 'numerics': [[None], [None], [None], [None], [None], [None]], 'codes': [[], [], [], [], [], []], 'to_event': [1, 3, 4, 5, 6, 7], 'target': 0}]]
+        expected = [{'PID': 12345, 'numerics': [[None, None], [None, None]], 'codes': [[2, 3], [2, 3, 4]], 'to_event': [1, 3], 'target': 1},
+                    {'PID': 12345, 'numerics': [[None, None], [None, None], [1, 1], [1, 1], [None, None]], 'codes': [[2, 3], [2, 3, 4], [], [], [4]], 'to_event': [1, 3, 4, 5, 6], 'target': 1},
+                    {'PID': 12345, 'numerics': [[None, None], [None, None], [1, 1], [1, 1], [None, None], [1, 3]], 'codes': [[2, 3], [2, 3, 4], [], [], [4], [2, 3, 4]], 'to_event': [1, 3, 4, 5, 6, 7], 'target': 0}]
         actual = self.evaluator.evaluate_timeline_for_training_rows(self.timeline, self.datadict)
 
-        assert_equals("", actual)
+        assert_equals(expected, actual)
