@@ -12,6 +12,12 @@ class TreatmentEncounter(Encounter):
     INDICATION_MAINTENANCE_CR = 4
     INDICATION_OTHER_INDICATION = 9
 
+    DP_INDICATIONS = {"INDICATION_INDUCTION": INDICATION_INDUCTION,
+                      "INDICATION_MRD_TREATMENT": INDICATION_MRD_TREATMENT,
+                      "INDICATION_CONSOLIDATION_CR": INDICATION_CONSOLIDATION_CR,
+                      "INDICATION_MAINTENANCE_CR": INDICATION_MAINTENANCE_CR
+                      }
+
     def __init__(self, patientid, date, start_date, days_since_epoch, days_since_relapse, **kwargs):
         super(TreatmentEncounter, self).__init__(patientid, date, days_since_epoch, days_since_relapse, **kwargs)
         self.start_date = self._date_coercion(start_date)
@@ -101,18 +107,50 @@ class TreatmentEncounter(Encounter):
         >>> encounter.is_decision_point()
         True
         """
-        return (self.date == self.start_date
-                and any((self.treatment_dict['induction_chemo'],
-                        self.treatment_dict['consolidation_chemo'],
-                        self.treatment_dict['radiation'],
-                        self.treatment_dict['targeted'],
-                        self.treatment_dict['checkpoint_inhibitors'],
-                        self.treatment_dict['cytokine'],
-                        self.treatment_dict['cli'],
-                        self.treatment_dict['hct'],
-                        self.treatment_dict['other_np'],
-                        self.treatment_dict['other_tcell_targeted']))
-                and self.rx_indication != TreatmentEncounter.INDICATION_OTHER_INDICATION)
+
+        if self.date == self.start_date:
+            if any((self.treatment_dict['induction_chemo'],
+                    self.treatment_dict['consolidation_chemo'],
+                    self.treatment_dict['radiation'],
+                    self.treatment_dict['targeted'],
+                    self.treatment_dict['checkpoint_inhibitors'],
+                    self.treatment_dict['cytokine'],
+                    self.treatment_dict['cli'],
+                    self.treatment_dict['hct'],
+                    self.treatment_dict['other_np'],
+                    self.treatment_dict['other_tcell_targeted']
+            )):
+                if self.rx_indication != TreatmentEncounter.INDICATION_OTHER_INDICATION:
+                    return True
+
+                msg = "TreatmentEncounter NOT DecisionPoint for PatientId: {pid}. Failed at Indication check: " \
+                      "Expected Indication: {exp_ind} Actual Indication: {act_ind} Treatments given: {treat} ".format(
+                    pid=self.patientid,
+                    exp_ind=TreatmentEncounter.DP_INDICATIONS,
+                    act_ind=self.rx_indication,
+                    treat=self.treatments)
+                logger.warning(msg)
+                return False
+            msg = "TreatmentEncounter NOT DecisionPoint for PatientId: {pid}. Failed at Treatments Given check: " \
+                  "Expected Indication: {exp_ind} Actual Indication: {act_ind} Treatments given: {treat} ".format(
+                    pid=self.patientid,
+                    exp_ind=TreatmentEncounter.DP_INDICATIONS,
+                    act_ind=self.rx_indication,
+                    treat=self.treatments)
+            logger.warning(msg)
+            return False
+        msg = "TreatmentEncounter NOT DecisionPoint for PatientId: {pid}. Failed at Dates Given check: " \
+              "Expected Date: {exp_date} Actual Date: {act_date} " \
+              "Expected Indication: {exp_ind} Actual Indication: {act_ind} Treatments given: {treat} ".format(
+                pid=self.patientid,
+                exp_date=self.start_date,
+                act_date=self.date,
+                exp_ind=TreatmentEncounter.DP_INDICATIONS,
+                act_ind=self.rx_indication,
+                treat=self.treatments)
+        logger.debug(msg)
+        return False
+
 
 class TreatmentEncounterFactory(EncounterFactory):
     """
