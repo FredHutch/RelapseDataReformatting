@@ -1,5 +1,6 @@
 import json
 import logging
+import numpy as np
 import pandas as pd
 import os
 
@@ -13,7 +14,7 @@ from classes.evaluator.trainingrowevaluator import TrainingRowEvaluator
 
 
 import scripts.map_categorical_features as ddict
-from scripts.map_categorical_features import gateway_feature_recode_map
+from scripts import GATEWAY_FEATURE_RECODE_MAP, BUCKETS
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -29,7 +30,8 @@ def pull_gateway_data(config):
     # define female_donor_male_recipient
     gateway_df['female_donor_male_recipient'] = gateway_df.eval("donsex == 'Female' and sex == 'Male'").astype(int)
     # recode features
-    gateway_df = recode_features(gateway_df, gateway_feature_recode_map)
+    gateway_df = recode_features(gateway_df, GATEWAY_FEATURE_RECODE_MAP)
+    gateway_df = bucket_features(gateway_df, BUCKETS)
     gateway_df = pd.get_dummies(gateway_df,prefix=['cmvx','hla_cco','tbidose','celltxl'], \
                                 columns = ['cmvx','hla_cco','tbidose','celltxl'])
     # one-hot encode proplbl
@@ -75,6 +77,21 @@ def recode_features(df, lookups):
         df[col] = df[col].apply(lambda x: get_values(x, lookups[col]))
     return df
 
+def bucket_features(df, lookups):
+    """
+    update column values in-place
+    :param df: pandas dataframe
+    :param lookups: dictionary
+    :return: pandas dataframe
+    """   
+    # numeric columns to bucket as categorical
+    cols = set(lookups.keys()).intersection(set(df.columns))
+    def bucketing_function(value, col):
+        return np.nanmax(np.array([k if value >= v[0] and value < v[1] else None for k,v in \
+                        lookups[col].items()], dtype=np.float64))
+    for col in cols:
+        df[col] = df[col].apply(lambda x: bucketing_function(x,col))
+    return df
 
 def pull_from_red_cap(config):
     """
@@ -89,7 +106,7 @@ def pull_from_red_cap(config):
     for form in project.forms:
 
         try:
-            intermediate_df = project.export_records(forms=[form], format='df')
+            intermediate_df = bucket_features(project.export_records(forms=[form], format='df'), BUCKETS)       
         except RedcapError:
             logger.warning("Failure to export records from REDCap for form: {}".format(form))
             continue
