@@ -40,6 +40,12 @@ gateway_feature_recode_map = {'cmvx': {'-/-': 'neg_neg', '-/': 'neg_neg', '/': '
                                           'URD/MATCHED': 'URD/MATCHED',
                                           'URD/MISMATCH': 'URD/MISMATCH'}}
 
+buckets = {'txage':{0: (0, 1), 1: (1, 12), 2: (13, 18), 3: (18, 60), 4: (60, 160)},
+           'relage':{0: (0, 1), 1: (1, 12), 2: (13, 18), 3: (18, 60), 4: (60, 160)},
+           'pb_blasts':{0: (0, 1), 1:(1, 5), 2:(5, 20), 3:(20, 50), 4:(50, 100)},
+           'bm_blast':{0: (0, 1), 1:(1, 5), 2:(5, 20), 3:(20, 50), 4:(50, 100)},
+           'wbc':{0: (0, .5), 1: (.5, 1), 2:(1, 10), 3: (10, 30), 4:(30, 50), 5: (50,100)}
+           }
 
 class DataDictionary():
     def __init__(self, data_dict_csv_path=None, data_dict_pkl_path=None, categorical_feature_path=None):
