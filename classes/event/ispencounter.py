@@ -32,5 +32,6 @@ class ISPEncounterFactory(EncounterFactory):
         row_dictionary['days_since_relapse'] = df_row.get('days_index_rel_to_ispact', None)
         row_dictionary['e_isp'] = df_row.get('e_isp', None)
         row_dictionary['w_isp_stop'] = df_row.get('w_isp_stop', None)
+        row_dictionary['isp_event'] = df_row.get('redcap_repeat_instrument', None)
 
         return row_dictionary

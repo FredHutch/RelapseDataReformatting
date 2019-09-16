@@ -33,5 +33,6 @@ class GVHDEncounterFactory(EncounterFactory):
         row_dictionary['gvhd_type'] = df_row.get('e_gvhd', None)
         row_dictionary['acute_gvhd_grade'] = df_row.get('w_sub_agvh_grade', None)
         row_dictionary['chronic_gvhd_severity'] = df_row.get('w_sub_cgvh_severity', None)
+        row_dictionary['gvhd_event'] = df_row.get('redcap_repeat_instrument', None)
 
         return row_dictionary

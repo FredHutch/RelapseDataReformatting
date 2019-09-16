@@ -37,5 +37,6 @@ class GraftRejectionEncounterFactory(EncounterFactory):
         row_dictionary['chim33_dnr3'] = df_row.get('chim33_dnr3', None)
         row_dictionary['chim3_dnr4'] = df_row.get('chim3_dnr4', None)
         row_dictionary['chim_mark'] = df_row.get('chim_mark', None)
+        row_dictionary['graft_rej_event'] = df_row.get('graft_rej', None)
 
         return row_dictionary

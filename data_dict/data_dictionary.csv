@@ -945,7 +945,7 @@ proplbl_MMF,first_HCT,Code,Binary,Static,Manual
 proplbl_MTX,first_HCT,Code,Binary,Static,Manual
 proplbl_Post-Transplant_Cyclophosphamide,first_HCT,Code,Binary,Static,Manual
 proplbl_RAPA,first_HCT,Code,Binary,Static,Manual
-cmvx_neg_neg,first_HCT,Cdoe,Binary,Static,Manual
+cmvx_neg_neg,first_HCT,Code,Binary,Static,Manual
 cmvx_Others,first_HCT,Drop,Binary,Static,Manual
 cmvx_Unknown,first_HCT,Drop,Binary,Static,Manual
 hla_cco_STEROIDS,first_HCT,Drop,Binary,Static,Manual
@@ -954,7 +954,10 @@ hla_cco_REL/HAPLOIDENTICAL,first_HCT,Code,Binary,Static,Manual
 hla_cco_REL/MATCHED,first_HCT,Code,Binary,Static,Manual
 hla_cco_REL/MISMATCH,first_HCT,Code,Binary,Static,Manual
 hla_cco_URD/MATCHED,first_HCT,Code,Binary,Static,Manual
-hla_cco_URD/MISMATCH,,Code,Binary,Static,Manual
+hla_cco_URD/MISMATCH,first_HCT,Code,Binary,Static,Manual
 celltxl_BM,first_HCT,Code,Binary,Static,Manual
 celltxl_CORD,first_HCT,Code,Binary,Static,Manual
 celltxl_PBSC,first_HCT,Code,Binary,Static,Manual
+isp_event,immunosuppression_kinetics,Code,Binary,Static,Manual
+graft_rej_event,graft_rejection,Code,Binary,Static,Manual
+gvhd_event,gvhd,Code,Binary,Static,Manual
