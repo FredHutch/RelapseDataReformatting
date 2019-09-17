@@ -8,6 +8,7 @@ class GraftRejectionEncounter(Encounter):
         self.chim33_dnr3 = kwargs.get('chim33_dnr3', None)
         self.chim3_dnr4 = kwargs.get('chim3_dnr4', None)
         self.chim_mark = kwargs.get('chim_mark', None)
+        self.graft_rej_event = kwargs.get('graft_rej_event', None)
 
     def is_decision_point(self):
         """
@@ -21,6 +22,12 @@ class GraftRejectionEncounter(Encounter):
     def treatments(self):
         return list()
 
+    @property
+    def features(self):
+        f = super(GraftRejectionEncounter, self).features
+        f['graft_rej_event'] = self.graft_rej_event
+
+        return f
 
 class GraftRejectionEncounterFactory(EncounterFactory):
     def __init__(self):

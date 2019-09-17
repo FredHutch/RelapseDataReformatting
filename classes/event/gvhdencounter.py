@@ -6,6 +6,7 @@ class GVHDEncounter(Encounter):
         self.gvhd_type = kwargs.get('gvhd_type', None)
         self.acute_gvhd_grade = kwargs.get('acute_gvhd_grade', None)
         self.chronic_gvhd_severity = kwargs.get('chronic_gvhd_severity', None)
+        self.gvhd_event = kwargs.get('gvhd_event', None)
 
     def is_decision_point(self):
         """
@@ -19,6 +20,11 @@ class GVHDEncounter(Encounter):
     def treatments(self):
         return list()
 
+    @property
+    def features(self):
+        f = super(GVHDEncounter, self).features
+        f['gvhd_event'] = self.gvhd_event
+        return f
 
 class GVHDEncounterFactory(EncounterFactory):
     def __init__(self):
@@ -33,6 +39,6 @@ class GVHDEncounterFactory(EncounterFactory):
         row_dictionary['gvhd_type'] = df_row.get('e_gvhd', None)
         row_dictionary['acute_gvhd_grade'] = df_row.get('w_sub_agvh_grade', None)
         row_dictionary['chronic_gvhd_severity'] = df_row.get('w_sub_cgvh_severity', None)
-        row_dictionary['gvhd_event'] = df_row.get('redcap_repeat_instrument', None)
+        row_dictionary['gvhd_event'] = 1
 
         return row_dictionary
