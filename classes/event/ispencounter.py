@@ -6,6 +6,7 @@ class ISPEncounter(Encounter):
         super(ISPEncounter, self).__init__(patientid, date, days_since_epoch, days_since_relapse, **kwargs)
         self.e_isp = kwargs.get('e_isp', None)
         self.w_isp_stop = kwargs.get('w_isp_stop', None)
+        self.isp_event = kwargs.get('isp_event', None)
 
     def is_decision_point(self):
         """
@@ -18,6 +19,13 @@ class ISPEncounter(Encounter):
     @property
     def treatments(self):
         return list()
+
+    @property
+    def features(self):
+        f = super(ISPEncounter, self).features
+        f['isp_event'] = self.isp_event
+
+        return f
 
 
 class ISPEncounterFactory(EncounterFactory):
@@ -32,5 +40,6 @@ class ISPEncounterFactory(EncounterFactory):
         row_dictionary['days_since_relapse'] = df_row.get('days_index_rel_to_ispact', None)
         row_dictionary['e_isp'] = df_row.get('e_isp', None)
         row_dictionary['w_isp_stop'] = df_row.get('w_isp_stop', None)
+        row_dictionary['isp_event'] = 1
 
         return row_dictionary
