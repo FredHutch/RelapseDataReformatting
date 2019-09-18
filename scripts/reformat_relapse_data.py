@@ -106,7 +106,7 @@ def pull_from_red_cap(config):
     for form in project.forms:
 
         try:
-            intermediate_df = bucket_features(project.export_records(forms=[form], format='df'), BUCKETS)       
+            intermediate_df = bucket_features(project.export_records(forms=[form], format='df'), BUCKETS)   
         except RedcapError:
             logger.warning("Failure to export records from REDCap for form: {}".format(form))
             continue
