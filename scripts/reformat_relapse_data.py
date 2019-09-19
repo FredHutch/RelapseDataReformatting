@@ -43,9 +43,6 @@ def pull_gateway_data(config):
                                             'don1sex', 'don2sex', 'sex', 'donsex'])
     return gateway_df
 
-
-
-
 def get_values(elements, lookups):
     """
     get value from lookup dictionary
@@ -104,7 +101,6 @@ def pull_from_red_cap(config):
     patient_eds = defaultdict(dict)
 
     for form in project.forms:
-
         try:
             intermediate_df = bucket_features(project.export_records(forms=[form], format='df'), BUCKETS)   
         except RedcapError:
@@ -151,6 +147,7 @@ def pull_from_red_cap(config):
     data_dict_csv_path = os.path.realpath(config["DATA_DICTIONARY"]["data_dict_csv"])
     categorical_feature_path = os.path.realpath(config["DATA_DICTIONARY"]["categorical_feature"])
     data_dict = ddict.DataDictionary(data_dict_csv_path, data_dict_pkl_path, categorical_feature_path)
+    data_dict.load_data_dict()
     training_translator = TrainingRowEvaluator()
 
     all_rows = []

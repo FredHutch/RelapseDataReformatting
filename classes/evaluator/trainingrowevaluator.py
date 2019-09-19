@@ -35,12 +35,11 @@ class TrainingRowEvaluator:
                            **features
                            }
 
-                visit_rep = self.build_visit_dict(rowdict, datadict, bad_cols)
+                visit_rep, bad_cols = self.build_visit_dict(rowdict, datadict, bad_cols)
                 visit_representations.append(visit_rep)
             training_row = self.create_condensed_row(timeline.patientid, visit_representations,
                                                       self.convert_label_to_int(dp.label))
             dp_rows.append(training_row)
-
         if bad_cols:
             msg = "Alert! The following feature names could not be processed: {cols}".format(cols=bad_cols)
             logger.warning(msg)
@@ -83,18 +82,23 @@ class TrainingRowEvaluator:
                     }
         codeset = set()
         for col, val in rowdict.items():
+            #print (col + ' : ' + str(val))
             codekey = datadict.code_cols.get(col)
+
             if codekey:
                 try:
                     mapped_code = None
                     if (codekey[1] != 'Binary'):
-                        mapped_code = datadict.code_mappings.get("{}_{}".format(col, val))
+                        mapped_code = datadict.code_mappings.get("{}_{}".format(col, int(val)))
                     elif int(val):
                         mapped_code = datadict.code_mappings.get(col)
                     if mapped_code:
                         codeset.add(mapped_code)
+                    elif col not in datadict.drop_cols:
+                        error_cols.add(col)
                 except:
                     error_cols.add(col)
+            
             elif col in datadict.numeric_cols:
                 # change NULL values in numerics to valid default float given in config file
                 # backoff to zero if column is not in config['DEFAULT_VALUES']
@@ -107,4 +111,4 @@ class TrainingRowEvaluator:
                         val = 0
                 newvisit['numerics'][datadict.numeric_cols.index(col)] = val
         newvisit['codes'] = list(codeset)
-        return newvisit
+        return newvisit, error_cols
