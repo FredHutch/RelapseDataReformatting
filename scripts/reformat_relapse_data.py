@@ -4,14 +4,15 @@ import numpy as np
 import pandas as pd
 import os
 
+from sklearn.model_selection import KFold
 from collections import defaultdict
 from redcap import Project, RedcapError
+
 from classes import map_instrument_df_to_class
 from classes.collection.eventday import EventDay
 from classes.collection.patienttimeline import PatientTimeline
 from classes.evaluator.patienttimelineevaluator import PatientTimelineEvaluator
 from classes.evaluator.trainingrowevaluator import TrainingRowEvaluator
-
 
 import scripts.map_categorical_features as ddict
 from scripts import GATEWAY_FEATURE_RECODE_MAP, BUCKETS
@@ -172,6 +173,56 @@ def pull_from_red_cap(config):
     training_df.to_pickle(path=output_path)
     logger.info("wrote training dataframe to output path: {o}".format(o=output_path))
 
+def write_training_data(config):
+    """
+    split input data frame to be training set and dev set.
+    :param config:
+    :return:
+    """
+    # read training data frame
+    filepath = os.path.sep.join([config['OUTPUT_FILEPATH'], "".join([config['TRAINING_DATAFRAME_NAME'], ".pkl"])])
+    training_df = pd.read_pickle(filepath)
+
+    # split training, dev sets
+    train_dev_split_sets = train_dev_split_cv(training_df, k_folds=5)
+
+    # write to pkl
+    for i in range(len(train_dev_split_sets)):
+        for k in train_dev_split_sets[i].keys():
+            outpath = os.path.join(config['OUTPUT_FILEPATH'], "{}_{}.pkl".format(k, i))
+            train_dev_split_sets[i][k].to_pickle(outpath)
+            logger.info("wrote train, dev data frame to output path: {o}".format(o=outpath))
+
+def train_dev_split_cv(df, k_folds = None, seed = 123):
+    """
+    split train dev sets using cross validation
+    To-do: integrate more CV methods, e.g., loo, lop, etc
+    :param df: data frame
+    :param k_folds: number of folds specified in cross validation
+    :return: data_train,  in lists
+    """
+    np.random.seed(seed)
+
+    output = []
+    df_subset = {}
+
+    X = df.iloc[:, df.columns != 'target']
+    y = df.target
+
+    if not k_folds:
+        print('Applied 5-fold cross validation by default')
+        k_folds = 5
+
+    # K Fold CV
+    kf = KFold(n_splits=k_folds)
+    kf.get_n_splits(X)
+
+    for train_index, test_index in kf.split(X):
+        df_subset['data_train'], df_subset['data_test'] = X.iloc[train_index],  X.iloc[test_index]
+        df_subset['target_train'], df_subset['target_test'] = y.iloc[train_index],  y.iloc[test_index]
+        output.append(df_subset)
+    return output
+
 if __name__ == '__main__':
     import yaml
     import logging
@@ -189,3 +240,4 @@ if __name__ == '__main__':
             config.update(json.load(fin))
 
     pull_from_red_cap(config)
+    write_training_data(config)
