@@ -190,8 +190,8 @@ def write_train_dev_test(config):
 
     # write to pkl
     # write holdout test set
-    data_holdout = df_holdout.iloc[:, df_holdout.columns != 'target']
-    target_holdout = df_holdout.target
+    target_holdout = df_holdout.iloc[:, df_holdout.columns == 'target']
+    data_holdout = df_holdout.target.to_frame()
     data_holdout.to_pickle(os.path.join(config['OUTPUT_FILEPATH'], "data_holdout.pkl"))
     target_holdout.to_pickle(os.path.join(config['OUTPUT_FILEPATH'], "target_holdout.pkl"))
 
@@ -214,7 +214,7 @@ def train_dev_split_cv(df, k_folds = None):
     df_subset = {}
 
     X = df.iloc[:, df.columns != 'target']
-    y = df.target
+    y = df.target.to_frame()
 
     if not k_folds:
         print('Applied 5-fold cross validation by default')
