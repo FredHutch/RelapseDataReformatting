@@ -35,12 +35,11 @@ class TrainingRowEvaluator:
                            **features
                            }
 
-                visit_rep = self.build_visit_dict(rowdict, datadict, bad_cols)
+                visit_rep, bad_cols = self.build_visit_dict(rowdict, datadict, bad_cols)
                 visit_representations.append(visit_rep)
             training_row = self.create_condensed_row(timeline.patientid, visit_representations,
                                                       self.convert_label_to_int(dp.label))
             dp_rows.append(training_row)
-
         if bad_cols:
             msg = "Alert! The following feature names could not be processed: {cols}".format(cols=bad_cols)
             logger.warning(msg)
@@ -77,24 +76,23 @@ class TrainingRowEvaluator:
 
     def build_visit_dict(self, rowdict, datadict, error_cols, default_vals=None):
 
-        newvisit = {'PID': rowdict['PID'],
+        newvisit = {'PID': rowdict.pop('PID'),
                     'numerics': ([None] * len(datadict.numeric_cols)),
-                    'DAY': int(rowdict.get('DAY', 0))
+                    'DAY': int(rowdict.pop('DAY', 0))
                     }
         codeset = set()
-        for col, val in rowdict.items():
-            codekey = datadict.code_cols.get(col)
-            if codekey:
-                try:
-                    mapped_code = None
-                    if (codekey[1] != 'Binary'):
-                        mapped_code = datadict.code_mappings.get("{}_{}".format(col, val))
-                    elif int(val):
-                        mapped_code = datadict.code_mappings.get(col)
-                    if mapped_code:
-                        codeset.add(mapped_code)
-                except:
-                    error_cols.add(col)
+        for col, val in rowdict.items():    
+            direct_codekey = datadict.code_cols.get(col)
+            one_hot_codekey = datadict.code_mappings.get("{}_{}".format(col, int(val)))
+            if col in datadict.drop_cols:
+                pass
+            elif direct_codekey:
+                if direct_codekey[1] == 'Binary' and not val:
+                    pass
+                else:
+                    codeset.add(datadict.code_mappings.get(col))
+            elif one_hot_codekey:
+                codeset.add(one_hot_codekey)
             elif col in datadict.numeric_cols:
                 # change NULL values in numerics to valid default float given in config file
                 # backoff to zero if column is not in config['DEFAULT_VALUES']
@@ -106,5 +104,7 @@ class TrainingRowEvaluator:
                                 dictionary in config.json - Column  ({}) defaulting to 0 ".format(col))
                         val = 0
                 newvisit['numerics'][datadict.numeric_cols.index(col)] = val
+            else:
+                error_cols.add(col)
         newvisit['codes'] = list(codeset)
-        return newvisit
+        return newvisit, error_cols

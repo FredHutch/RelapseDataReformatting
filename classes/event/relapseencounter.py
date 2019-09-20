@@ -78,6 +78,9 @@ class RelapseEncounterFactory(EncounterFactory):
         row_dictionary['relapse_or_response'] = df_row['e_response']
         row_dictionary['relapse_presentation'] = df_row['w_relapse']
         row_dictionary['cr_depth'] = df_row['w_crdepth']
+        row_dictionary['wbc'] = df_row['wbc']
+        row_dictionary['pb_blasts'] = df_row['pb_blasts']
+        row_dictionary['bm_blasts'] = df_row['bm_blasts']
 
         return row_dictionary
 

@@ -86,3 +86,8 @@ p_drug_stop_change_8,primary_prophylaxis_against_relapse,Code,Num,Static,No,3
 proph_stop_reason1_8,primary_prophylaxis_against_relapse,Code,Num,Static,No,11
 proph_stop_reason2_8,primary_prophylaxis_against_relapse,Code,Num,Static,No,11
 proph_restart_yesno_8,primary_prophylaxis_against_relapse,Code,Num,Static,No,3
+txage,gateway_encounter,Code,Num,Static,5
+relage,gateway_encounter,Code,Num,Static,5
+pb_blasts,response_or_relapse_event,Code,Num,Time-Varying,5
+bm_blasts,response_or_relapse_event,Code,Num,Time-Varying,5
+wbc,response_or_relapse_event,Code,Num,Time-Varying,6
