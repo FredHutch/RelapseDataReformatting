@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import os
 
-from sklearn.model_selection import KFold
+from sklearn.model_selection import GroupKFold
 from collections import defaultdict
 from redcap import Project, RedcapError
 
@@ -173,7 +173,7 @@ def pull_from_red_cap(config):
     training_df.to_pickle(path=output_path)
     logger.info("wrote training dataframe to output path: {o}".format(o=output_path))
 
-def write_training_data(config):
+def write_train_dev_test(config):
     """
     split input data frame to be training set and dev set.
     :param config:
@@ -183,17 +183,26 @@ def write_training_data(config):
     filepath = os.path.sep.join([config['OUTPUT_FILEPATH'], "".join([config['TRAINING_DATAFRAME_NAME'], ".pkl"])])
     training_df = pd.read_pickle(filepath)
 
+    # holdout test sets
+    df_train_dev, df_holdout = holdout_test(training_df, holdout_percent=0.1, seed=12345)
     # split training, dev sets
-    train_dev_split_sets = train_dev_split_cv(training_df, k_folds=5)
+    train_dev_split_sets = train_dev_split_cv(df_train_dev, k_folds=5)
 
     # write to pkl
+    # write holdout test set
+    data_holdout = df_holdout.iloc[:, df_holdout.columns != 'target']
+    target_holdout = df_holdout.target
+    data_holdout.to_pickle(os.path.join(config['OUTPUT_FILEPATH'], "data_holdout.pkl"))
+    target_holdout.to_pickle(os.path.join(config['OUTPUT_FILEPATH'], "target_holdout.pkl"))
+
+    # write train, dev sets
     for i in range(len(train_dev_split_sets)):
         for k in train_dev_split_sets[i].keys():
             outpath = os.path.join(config['OUTPUT_FILEPATH'], "{}_{}.pkl".format(k, i))
             train_dev_split_sets[i][k].to_pickle(outpath)
             logger.info("wrote train, dev data frame to output path: {o}".format(o=outpath))
 
-def train_dev_split_cv(df, k_folds = None, seed = 123):
+def train_dev_split_cv(df, k_folds = None):
     """
     split train dev sets using cross validation
     To-do: integrate more CV methods, e.g., loo, lop, etc
@@ -201,8 +210,6 @@ def train_dev_split_cv(df, k_folds = None, seed = 123):
     :param k_folds: number of folds specified in cross validation
     :return: data_train,  in lists
     """
-    np.random.seed(seed)
-
     output = []
     df_subset = {}
 
@@ -214,14 +221,41 @@ def train_dev_split_cv(df, k_folds = None, seed = 123):
         k_folds = 5
 
     # K Fold CV
-    kf = KFold(n_splits=k_folds)
-    kf.get_n_splits(X)
+    group_kfold = GroupKFold(n_splits=k_folds)
+    group_kfold.get_n_splits(X, y, groups=X.PID)
 
-    for train_index, test_index in kf.split(X):
-        df_subset['data_train'], df_subset['data_test'] = X.iloc[train_index],  X.iloc[test_index]
-        df_subset['target_train'], df_subset['target_test'] = y.iloc[train_index],  y.iloc[test_index]
+    for train_index, test_index in group_kfold.split(X, y, groups=X.PID):
+        df_subset['data_train'], df_subset['data_test'] = X.iloc[train_index], X.iloc[test_index]
+        df_subset['target_train'], df_subset['target_test'] = y.iloc[train_index], y.iloc[test_index]
         output.append(df_subset)
     return output
+
+def holdout_test(df, holdout_percent = None, seed = None):
+    """
+    partition holdout test set at PID level
+    :param df: input data
+    :param holdout_percent: % of data hold out for testing
+    :return: two sets: holdout and (train+dev)
+    """
+    np.random.seed(seed)
+
+    # get unique PID list (sorted acs)
+    pid_list = get_sorted_pid_list(df)
+    perm = np.random.permutation(pid_list)
+    n_pid = len(pid_list)
+    sep_index = int(n_pid*holdout_percent)
+    df_holdout = df.loc[df.PID.isin(perm[:sep_index])]
+    df_train_dev = df.loc[df.PID.isin(perm[sep_index:])]
+
+    return df_train_dev, df_holdout
+
+
+def get_sorted_pid_list(df):
+    """
+    return unique PID list, in ascending order
+    """
+    pid_list = df.PID.unique()
+    return np.sort(pid_list)
 
 if __name__ == '__main__':
     import yaml
@@ -240,4 +274,4 @@ if __name__ == '__main__':
             config.update(json.load(fin))
 
     pull_from_red_cap(config)
-    write_training_data(config)
+    write_train_dev_test(config)
