@@ -42,7 +42,6 @@ class EventDay():
             ...
         ValueError: An Error occurred adding an event with patientid 12346 cannot be added to the EventDay collection with patientid 12345
         """
-
         if event.date != self.date:
             error_msg = "An Error occurred adding an event with date {new_d} cannot be added to the " \
                         "EventDay collection with date {old_d}".format(new_d=event.date, old_d=self.date)
@@ -52,7 +51,6 @@ class EventDay():
                         "EventDay collection with patientid {old_pid}".format(new_pid=event.patientid,
                                                                               old_pid=self.patientid)
             raise ValueError(error_msg)
-
         self.events.append(event)
 
     def is_decision_point(self):

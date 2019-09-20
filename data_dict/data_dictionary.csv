@@ -538,6 +538,7 @@ hct1_dx_7,patient_id,Code,Binary,Static,Manual
 hct1_eln_1,patient_id,Code,Binary,Static,Manual
 hct1_eln_2,patient_id,Code,Binary,Static,Manual
 hct1_eln_3,patient_id,Code,Binary,Static,Manual
+karyo_eln,patient_id,Drop,Char,Static,Manual
 karyo_eln_1,patient_id,Drop,Binary,Static,Manual
 karyo_eln_2,patient_id,Drop,Binary,Static,Manual
 karyo_eln_3,patient_id,Drop,Binary,Static,Manual
@@ -959,13 +960,14 @@ agvhlvr,first_HCT,Drop,Num,Static,No
 agvhgut,first_HCT,Drop,Num,Static,No
 don1sex,first_HCT,Drop,Char,Static,No
 don2sex,first_HCT,Drop,Char,Static,No
-tbidose_ge1200,first_HCT,Cdoe,Binary,Static,Manual
-tbidose_le450,first_HCT,Cdoe,Binary,Static,Manual
+tbidose_ge1200,first_HCT,Code,Binary,Static,Manual
+tbidose_le450,first_HCT,Code,Binary,Static,Manual
 proplbl_CNI,first_HCT,Code,Binary,Static,Manual
 proplbl_MMF,first_HCT,Code,Binary,Static,Manual
 proplbl_MTX,first_HCT,Code,Binary,Static,Manual
 proplbl_Post-Transplant_Cyclophosphamide,first_HCT,Code,Binary,Static,Manual
 proplbl_RAPA,first_HCT,Code,Binary,Static,Manual
+proplbl_STEROIDS,first_HCT,Code,Binary,Static,Manual
 cmvx_neg_neg,first_HCT,Code,Binary,Static,Manual
 cmvx_Others,first_HCT,Drop,Binary,Static,Manual
 cmvx_Unknown,first_HCT,Drop,Binary,Static,Manual

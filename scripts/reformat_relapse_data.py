@@ -12,7 +12,6 @@ from classes.collection.patienttimeline import PatientTimeline
 from classes.evaluator.patienttimelineevaluator import PatientTimelineEvaluator
 from classes.evaluator.trainingrowevaluator import TrainingRowEvaluator
 
-
 import scripts.map_categorical_features as ddict
 from scripts import GATEWAY_FEATURE_RECODE_MAP, BUCKETS
 
@@ -25,19 +24,19 @@ def pull_gateway_data(config):
     from static csv
     '''
     gateway_df = pd.read_csv(config['GATEWAY_DATA'])
-    # recode uwid
-    gateway_df['uwid'] = gateway_df['uwid'].map(lambda x: int(x.lstrip('U')))
+    # recode uwid - maintain as string to match redcap pt id
+    gateway_df['uwid'] = gateway_df['uwid'].map(lambda x: x.lstrip('U'))
     # define female_donor_male_recipient
     gateway_df['female_donor_male_recipient'] = gateway_df.eval("donsex == 'Female' and sex == 'Male'").astype(int)
     # recode features
     gateway_df = recode_features(gateway_df, GATEWAY_FEATURE_RECODE_MAP)
     gateway_df = bucket_features(gateway_df, BUCKETS)
-    gateway_df = pd.get_dummies(gateway_df,prefix=['cmvx','hla_cco','tbidose','celltxl'], \
-                                columns = ['cmvx','hla_cco','tbidose','celltxl'])
+    gateway_df = pd.get_dummies(gateway_df,prefix=['cmvx','hla_cco','tbidose','celltxl','txage','relage'], \
+                                columns = ['cmvx','hla_cco','tbidose','celltxl','txage','relage'])
     # one-hot encode proplbl
     proplbl = gateway_df.proplbl.str.strip().str.split(r'\s*,\s*', expand=True).apply(pd.Series.value_counts, 1).fillna(0, downcast='infer').add_prefix('proplbl_')
     gateway_df = pd.concat([gateway_df.drop(['proplbl'], axis=1), proplbl], axis=1, sort=False)
-    gateway_df = gateway_df.drop(columns = ['upn','txdatex', 'prexlbl', 'agvhday', \
+    gateway_df = gateway_df.drop(columns = ['upn','txdatex', 'prexlbl', 'agvhday', 'tx',\
                                             'don_drm', 'don_mat','birthdat','agvhdat',\
                                             'agvhgrd','agvhskn','agvhlvr','agvhgut', \
                                             'don1sex', 'don2sex', 'sex', 'donsex'])
@@ -105,8 +104,7 @@ def pull_from_red_cap(config):
             intermediate_df = bucket_features(project.export_records(forms=[form], format='df'), BUCKETS)   
         except RedcapError:
             logger.warning("Failure to export records from REDCap for form: {}".format(form))
-            continue
-        
+            continue        
         events = map_instrument_df_to_class(form, intermediate_df)
         if form == 'patient_id': 
             gateway_df = pull_gateway_data(config)
@@ -116,7 +114,6 @@ def pull_from_red_cap(config):
                 patient_eds[event.patientid][event.date] = EventDay(event.patientid, event.date, event)
             else:
                 patient_eds[event.patientid][event.date].add_event(event)
-
     evaluator = PatientTimelineEvaluator(induction_timewindow=90, mrd_timewindow=365,
                                           consolidation_timewindow=365, dpoint_eval_window=7)
     timelines = dict()

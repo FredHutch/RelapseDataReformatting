@@ -54,7 +54,7 @@ class DataDictionary():
     def get_code_mapping(self):
         with open(self.data_dict_pkl_path, "rb") as fin:
             code_d = pickle.load(fin)
-        self.code_mappings = code_d
+        self.code_mappings = dict((v,k) for k,v in code_d.items())
         
     
     def one_hot_encoding(self, feature):
@@ -86,9 +86,8 @@ class DataDictionary():
              e,g, {1: feature1, 2: feature2, ...}
         '''
         all_features = sorted(list(self.code_cols.keys()) + self.numeric_cols)
-        self.code_mappings = dict((i,all_features[i]) for i in range(len(all_features)))
         with open(self.data_dict_pkl_path, "wb") as fin:
-            pickle.dump(self.code_mappings, fin)
+            pickle.dump(dict((i,all_features[i]) for i in range(len(all_features))), fin)
 
 
 if __name__ == '__main__':
