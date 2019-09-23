@@ -81,9 +81,12 @@ class TrainingRowEvaluator:
                     'DAY': int(rowdict.pop('DAY', 0))
                     }
         codeset = set()
-        for col, val in rowdict.items():    
+        for col, val in rowdict.items():
+            cat_col, cat_val = datadict.is_categorical_var(col, val)
+            if cat_col:
+                col = cat_col
+                val = cat_val
             direct_codekey = datadict.code_cols.get(col)
-            one_hot_codekey = datadict.code_mappings.get("{}_{}".format(col, int(val)))
             if col in datadict.drop_cols:
                 pass
             elif direct_codekey:
@@ -91,8 +94,6 @@ class TrainingRowEvaluator:
                     pass
                 else:
                     codeset.add(datadict.code_mappings.get(col))
-            elif one_hot_codekey:
-                codeset.add(one_hot_codekey)
             elif col in datadict.numeric_cols:
                 # change NULL values in numerics to valid default float given in config file
                 # backoff to zero if column is not in config['DEFAULT_VALUES']

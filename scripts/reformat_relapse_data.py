@@ -145,6 +145,7 @@ def pull_from_red_cap(config):
     categorical_feature_path = os.path.realpath(config["DATA_DICTIONARY"]["categorical_feature"])
     data_dict = ddict.DataDictionary(data_dict_csv_path, data_dict_pkl_path, categorical_feature_path)
     data_dict.load_data_dict()
+    data_dict.load_categorical_dict()
     training_translator = TrainingRowEvaluator()
 
     all_rows = []

@@ -5,11 +5,16 @@ to unique integers for retain model training and interpretation
 import os
 import csv
 import json
+import logging
 import pickle
+
+logger = logging.getLogger(__name__)
+
 
 class DataDictionary():
     def __init__(self, data_dict_csv_path=None, data_dict_pkl_path=None, categorical_feature_path=None):
         self.code_cols = {}
+        self.categorical_cols = {}
         self.numeric_cols = []
         self.drop_cols = []
         self.code_mappings = {}        
@@ -17,20 +22,34 @@ class DataDictionary():
         self.data_dict_csv_path = data_dict_csv_path
         self.categorical_feature_path = categorical_feature_path
 
+    def is_categorical_var(self, col, val):
+        cat_val = self.categorical_cols.get(col, None)
+        if cat_val and int(val) <= int(cat_val):
+            cat_col = '{}_{}'.format(col, int(val))
+            return cat_col, 1
+
+        return None, None
+
 
     def create_data_dict(self):
-      # initial creation of pickled data dictionary
+        # initial creation of pickled data dictionary
         if self.data_dict_csv_path:
             self.read_csv_data_dict()
         else:
-          logger.warning("No input path for csv feature dictionary provided")        
+            logger.warning("No input path for csv feature dictionary provided")
         if self.data_dict_pkl_path:
             self.map_codes_to_ints()
         else:
-          logger.warning("No output path for pickled feature mapping provided")
+            logger.warning("No output path for pickled feature mapping provided")
+
+        if self.categorical_feature_path:
+            self.load_categorical_dict()
+        else:
+            logger.warning("No input path for csv categorical dictionary provided")
+
 
     def load_data_dict(self):
-      # read in precreated pickled data dictionary
+        # read in precreated pickled data dictionary
         if self.data_dict_csv_path:
             self.read_csv_data_dict()
         else:
@@ -39,7 +58,8 @@ class DataDictionary():
             self.get_code_mapping()
         else:
           logger.warning("No input path for pickled feature mapping provided")
-    
+
+
     def read_csv_data_dict(self):
         with open(self.data_dict_csv_path, "r") as fin:
             reader = csv.DictReader(fin)
@@ -51,12 +71,30 @@ class DataDictionary():
                 else:
                     self.drop_cols.append(row['Name'])        
 
+
     def get_code_mapping(self):
         with open(self.data_dict_pkl_path, "rb") as fin:
             code_d = pickle.load(fin)
         self.code_mappings = dict((v,k) for k,v in code_d.items())
-        
-    
+
+    def load_categorical_dict(self):
+        # read in precreated pickled data dictionary
+        if self.categorical_feature_path:
+            self.read_csv_categorical_dict(self.categorical_feature_path)
+        else:
+            logger.warning("No input path for csv categorical dictionary provided")
+
+
+    def read_csv_categorical_dict(self, csv_path):
+        # create dict for categorical features, {feature: n_total_levels}
+        cat_name = {}
+        with open(csv_path, "r") as fin:
+            reader = csv.DictReader(fin)
+            for row in reader:
+                cat_name[row['Name']] = row['N']
+
+        self.categorical_cols = cat_name
+
     def one_hot_encoding(self, feature):
         '''
         One-hot encoding, and rename categorical features
@@ -91,15 +129,15 @@ class DataDictionary():
 
 
 if __name__ == '__main__':
-  config = dict()
-  cd = os.path.dirname(os.path.realpath(__file__))
-  for c in ['../config_default.json', '../config.json']:
-      with open(os.path.join(cd, c), 'r') as fin:
-          config.update(json.load(fin))
-  # create the pickled integer feature mapping from categorical and data dictionary csv files
-  data_dict_csv_path = os.path.realpath(config["DATA_DICTIONARY"]["data_dict_csv"])
-  categorical_feature_path = os.path.realpath(config["DATA_DICTIONARY"]["categorical_feature"])
-  data_dict_pkl_path = os.path.realpath(config["DATA_DICTIONARY"]["data_dict"])
-  
-  ddict = DataDictionary(data_dict_csv_path, data_dict_pkl_path, categorical_feature_path)
-  ddict.create_data_dict()
+    config = dict()
+    cd = os.path.dirname(os.path.realpath(__file__))
+    for c in ['../config_default.json', '../config.json']:
+        with open(os.path.join(cd, c), 'r') as fin:
+            config.update(json.load(fin))
+    # create the pickled integer feature mapping from categorical and data dictionary csv files
+    data_dict_csv_path = os.path.realpath(config["DATA_DICTIONARY"]["data_dict_csv"])
+    categorical_feature_path = os.path.realpath(config["DATA_DICTIONARY"]["categorical_feature"])
+    data_dict_pkl_path = os.path.realpath(config["DATA_DICTIONARY"]["data_dict"])
+
+    ddict = DataDictionary(data_dict_csv_path, data_dict_pkl_path, categorical_feature_path)
+    ddict.create_data_dict()
