@@ -30,7 +30,7 @@ bm_blasts_0,response_or_relapse_event,Code,Num,Time-Varying,Manual
 bm_blasts_1,response_or_relapse_event,Code,Num,Time-Varying,Manual
 bm_blasts_2,response_or_relapse_event,Code,Num,Time-Varying,Manual
 bm_blasts_3,response_or_relapse_event,Code,Num,Time-Varying,Manual
-bm_blasts_5,response_or_relapse_event,Code,Num,Time-Varying,Manual
+bm_blasts_4,response_or_relapse_event,Code,Num,Time-Varying,Manual
 extramed_type___1,treatment_event,Code,Binary,Time-Varying,Yes
 extramed_type___2,treatment_event,Code,Binary,Time-Varying,Yes
 extramed_type___3,treatment_event,Code,Binary,Time-Varying,Yes
