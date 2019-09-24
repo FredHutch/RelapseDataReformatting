@@ -2,8 +2,8 @@ from classes.event.encounter import Encounter, EncounterFactory
 
 
 class gatewayEncounter(Encounter):
-    def __init__(self, patientid, date, days_since_epoch=0, **kwargs):
-        super(gatewayEncounter, self).__init__(patientid, date, days_since_epoch, None)
+    def __init__(self, patientid, date, days_since_epoch=0, days_since_relapse=0,**kwargs):
+        super(gatewayEncounter, self).__init__(patientid, date, days_since_epoch, days_since_relapse, **kwargs)
         
     def is_decision_point(self):
         """
@@ -23,4 +23,5 @@ class gatewayEncounterFactory(EncounterFactory):
         row_dictionary['date'] = df_row.get('txdate', None)
         row_dictionary['patientid'] = df_row.get('uwid', None) 
         row_dictionary['days_since_epoch'] = 0 #This is hardcoded to be the same day as HCT1
+        row_dictionary['days_since_epoch'] = 0
         return row_dictionary

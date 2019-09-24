@@ -33,8 +33,8 @@ def pull_gateway_data(config):
     # recode features
     gateway_df = recode_features(gateway_df, GATEWAY_FEATURE_RECODE_MAP)
     gateway_df = bucket_features(gateway_df, BUCKETS)
-    gateway_df = pd.get_dummies(gateway_df,prefix=['cmvx','hla_cco','tbidose','celltxl','txage','relage'], \
-                                columns = ['cmvx','hla_cco','tbidose','celltxl','txage','relage'])
+    gateway_df = pd.get_dummies(gateway_df,prefix=['cmvx','hla_cco','tbidose','celltxl'], \
+                                columns = ['cmvx','hla_cco','tbidose','celltxl'])
     # one-hot encode proplbl
     proplbl = gateway_df.proplbl.str.strip().str.split(r'\s*,\s*', expand=True).apply(pd.Series.value_counts, 1).fillna(0, downcast='infer').add_prefix('proplbl_')
     gateway_df = pd.concat([gateway_df.drop(['proplbl'], axis=1), proplbl], axis=1, sort=False)
@@ -108,6 +108,7 @@ def pull_from_red_cap(config):
             logger.warning("Failure to export records from REDCap for form: {}".format(form))
             continue        
         events = map_instrument_df_to_class(form, intermediate_df)
+
         if form == 'patient_id': 
             gateway_df = pull_gateway_data(config)
             events += map_instrument_df_to_class('gateway_encounter', gateway_df)
