@@ -45,7 +45,7 @@ GATEWAY_FEATURE_RECODE_MAP = {'cmvx': {'-/-': 'neg_neg', '-/': 'neg_neg', '/': '
                                           'REL/MATCHED': 'REL/MATCHED',
                                           'REL/MISMATCH': 'REL/MISMATCH',
                                           'REL/HAPLOIDENTICAL': 'REL/HAPLOIDENTICAL',
-                                          'REL/UNKNOWN': '',
+                                          'REL/UNKNOWN': 'REL/UNKNOWN',
                                           'RD/CORD': 'CORD',
                                           'URD/CORD-COMBINED': 'CORD',
                                           'URD/MATCHED': 'URD/MATCHED',
