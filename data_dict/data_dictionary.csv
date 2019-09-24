@@ -972,6 +972,7 @@ cmvx_neg_neg,first_HCT,Code,Binary,Static,Manual
 cmvx_Others,first_HCT,Drop,Binary,Static,Manual
 cmvx_Unknown,first_HCT,Drop,Binary,Static,Manual
 hla_cco_STEROIDS,first_HCT,Drop,Binary,Static,Manual
+hla_cco_REL/UNKNOWN,first_HCT,Drop,Binary,Static,Manual
 hla_cco_CORD,first_HCT,Code,Binary,Static,Manual
 hla_cco_REL/HAPLOIDENTICAL,first_HCT,Code,Binary,Static,Manual
 hla_cco_REL/MATCHED,first_HCT,Code,Binary,Static,Manual
