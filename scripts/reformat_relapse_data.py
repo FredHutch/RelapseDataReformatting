@@ -188,7 +188,7 @@ def write_train_dev_test(config):
     # write to pkl
     # write holdout test set
     target_holdout = df_holdout.iloc[:, df_holdout.columns == 'target']
-    data_holdout = df_holdout.target.to_frame()
+    data_holdout = df_holdout.iloc[:, df_holdout.columns != 'target']
     data_holdout.to_pickle(os.path.join(config['OUTPUT_FILEPATH'], "data_holdout.pkl"))
     target_holdout.to_pickle(os.path.join(config['OUTPUT_FILEPATH'], "target_holdout.pkl"))
 
