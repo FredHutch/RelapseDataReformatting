@@ -241,8 +241,9 @@ def holdout_test(df, holdout_percent = None, seed = None):
     perm = np.random.permutation(pid_list)
     n_pid = len(pid_list)
     sep_index = int(n_pid*holdout_percent)
-    df_holdout = df.loc[df.PID.isin(perm[:sep_index])]
-    df_train_dev = df.loc[df.PID.isin(perm[sep_index:])]
+    df['len'] = df['to_event'].str.len()
+    df_holdout = df.loc[df.PID.isin(perm[:sep_index])].sort_values(by='len').drop(columns='len')
+    df_train_dev = df.loc[df.PID.isin(perm[sep_index:])].sort_values(by='len').drop(columns='len')
 
     return df_train_dev, df_holdout
 
