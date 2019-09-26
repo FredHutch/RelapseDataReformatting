@@ -208,7 +208,6 @@ def train_dev_split_cv(df, k_folds = None):
     :return: data_train,  in lists
     """
     output = []
-    df_subset = {}
 
     X = df.iloc[:, df.columns != 'target']
     y = df.target.to_frame()
@@ -222,6 +221,7 @@ def train_dev_split_cv(df, k_folds = None):
     group_kfold.get_n_splits(X, y, groups=X.PID)
 
     for train_index, test_index in group_kfold.split(X, y, groups=X.PID):
+        df_subset = {}
         df_subset['data_train'], df_subset['data_test'] = X.iloc[train_index], X.iloc[test_index]
         df_subset['target_train'], df_subset['target_test'] = y.iloc[train_index], y.iloc[test_index]
         output.append(df_subset)
