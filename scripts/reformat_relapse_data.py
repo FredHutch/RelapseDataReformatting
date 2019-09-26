@@ -208,7 +208,6 @@ def train_dev_split_cv(df, k_folds = None):
     :return: data_train,  in lists
     """
     output = []
-    df_subset = {}
 
     X = df.iloc[:, df.columns != 'target']
     y = df.target.to_frame()
