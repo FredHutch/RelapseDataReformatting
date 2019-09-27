@@ -54,7 +54,7 @@ if __name__ == '__main__':
     #n, bins, patches = plt.hist(time_to_relapse, num_bins, density=True, facecolor='blue', alpha=0.5)
     plt.hist(time_to_relapse, bins=num_bins)
     plt.xlabel('Days to Relapse')
-    plt.ylabel('Probability')
+    plt.ylabel('Count')
     plt.title(r'Histogram of DtR')
     plt.grid(True)
     # Tweak spacing to prevent clipping of ylabel
