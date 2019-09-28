@@ -35,7 +35,7 @@ class ISPEncounterFactory(EncounterFactory):
         row_dictionary = self._store_df_row(df_row)
         row_dictionary['date'] = df_row.get('date_isp_action', None)
         row_dictionary['patientid'] = df_row.get('subject_id', None)
-        row_dictionary['days_since_epoch'] = df_row.get('days_hct1_to_ispact', None)
+        row_dictionary['days_since_epoch'] = max(0, df_row.get('days_hct1_to_ispact', 0))
         row_dictionary['days_since_relapse'] = df_row.get('days_index_rel_to_ispact', None)
         row_dictionary['e_isp'] = df_row.get('e_isp', None)
         row_dictionary['isp_event'] = 1
