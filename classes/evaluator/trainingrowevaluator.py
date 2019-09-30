@@ -2,6 +2,8 @@ import logging
 from operator import itemgetter
 from classes.collection.patienttimeline import PatientTimeline
 
+from scripts import FEATURE_RECODE_MAP
+
 logger = logging.getLogger(__name__)
 
 
@@ -86,7 +88,13 @@ class TrainingRowEvaluator:
             if cat_col:
                 col = cat_col
                 val = cat_val
+
+            if col in FEATURE_RECODE_MAP:
+                col = FEATURE_RECODE_MAP.get(col)
+
             direct_codekey = datadict.code_cols.get(col)
+            if col in datadict.combine_cols:
+                pass
             if col in datadict.drop_cols:
                 pass
             elif direct_codekey:
