@@ -12,6 +12,12 @@
 	"HEADERS": ["PID", "numerics", "codes", "to_event", "target"],
 	"OUTPUT_FILEPATH": "./data",
 	"TRAINING_DATAFRAME_NAME": "training_df",
+	"DECISION_PARAMETERS":{
+		"MRD_WINDOW": 365,
+		"CONSOLIDATION_WINDOW": 365,
+		"INDUCTION_WINDOW": 90,
+		"DECISION_POINT_EVAL_WINDOW": 7
+	},
 	"DEFAULT_VALUES":{
 		"X":0,
 		"Y":0,
