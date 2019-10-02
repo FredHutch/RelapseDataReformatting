@@ -91,3 +91,6 @@ relage,gateway_encounter,Code,Num,Static,No,5
 pb_blasts,response_or_relapse_event,Code,Num,Time-Varying,No,5
 bm_blasts,response_or_relapse_event,Code,Num,Time-Varying,No,5
 wbc,response_or_relapse_event,Code,Num,Time-Varying,No,6
+e_response,response_or_relapse_event,Code,Num,Time-Varying,No,2
+w_relapse,response_or_relapse_event,Code,Num,Time-Varying,No,4
+,,,,,,
