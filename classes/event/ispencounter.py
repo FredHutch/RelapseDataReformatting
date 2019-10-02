@@ -1,3 +1,4 @@
+import datetime as dt
 from classes.event.encounter import Encounter, EncounterFactory
 
 
@@ -23,7 +24,6 @@ class ISPEncounter(Encounter):
     def features(self):
         f = super(ISPEncounter, self).features
         f['isp_event'] = self.isp_event
-
         return f
 
 
@@ -35,9 +35,15 @@ class ISPEncounterFactory(EncounterFactory):
         row_dictionary = self._store_df_row(df_row)
         row_dictionary['date'] = df_row.get('date_isp_action', None)
         row_dictionary['patientid'] = df_row.get('subject_id', None)
-        row_dictionary['days_since_epoch'] = max(0, df_row.get('days_hct1_to_ispact', 0))
+        row_dictionary['days_since_epoch'] = df_row.get('days_hct1_to_ispact', 0)
         row_dictionary['days_since_relapse'] = df_row.get('days_index_rel_to_ispact', None)
         row_dictionary['e_isp'] = df_row.get('e_isp', None)
-        row_dictionary['isp_event'] = 1
-
+        # do not encode ISP stop dates to look just like start and restart dates
+        if row_dictionary['e_isp'] != 2:
+            row_dictionary['isp_event'] = 1
+        # censor ISP to be the HCT date at the earliest
+        if row_dictionary['days_since_epoch'] < 0:
+            row_dictionary['date'] = dt.datetime.strptime(row_dictionary['date'],'%Y-%m-%d') - \
+                                     dt.timedelta(days=row_dictionary['days_since_epoch'])
+            row_dictionary['days_since_epoch'] = 0
         return row_dictionary
