@@ -111,7 +111,7 @@ days_hct1_to_ispact,immunosuppression_kinetics,Drop,Char,Static,No
 days_index_rel_to_ispact,immunosuppression_kinetics,Drop,Char,Static,No
 immunosuppression_kinetics_complete,immunosuppression_kinetics,Drop,Num,Static,No
 e_isp_1,immunosuppression_kinetics,Code,Binary,Static,Manual
-e_isp_2,immunosuppression_kinetics,Code,Binary,Static,Manual
+e_isp_2,immunosuppression_kinetics,Drop,Binary,Static,Manual
 e_isp_3,immunosuppression_kinetics,Code,Binary,Static,Manual
 w_isp_stop_1,immunosuppression_kinetics,Code,Binary,Static,Manual
 w_isp_stop_2,immunosuppression_kinetics,Code,Binary,Static,Manual

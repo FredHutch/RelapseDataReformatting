@@ -103,13 +103,12 @@ def pull_from_red_cap(config):
 
     for form in project.forms:
         try:
-            intermediate_df = bucket_features(project.export_records(forms=[form], format='df'), BUCKETS)   
+            intermediate_df = bucket_features(project.export_records(forms=[form], format='df'), BUCKETS)
         except RedcapError:
             logger.warning("Failure to export records from REDCap for form: {}".format(form))
             continue        
         events = map_instrument_df_to_class(form, intermediate_df)
-
-        if form == 'patient_id': 
+        if form == 'patient_id':
             gateway_df = pull_gateway_data(config)
             events += map_instrument_df_to_class('gateway_encounter', gateway_df)
         for event in events:
