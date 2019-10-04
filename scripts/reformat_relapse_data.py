@@ -123,6 +123,7 @@ def pull_from_red_cap(config):
                                          dpoint_eval_window=evaluation_params["DECISION_POINT_EVAL_WINDOW"])
     timelines = dict()
     sum_dps = 0
+    dp_type = dict()
     for patientid, event_days in patient_eds.items():
         timelines[patientid] = PatientTimeline(patientid, list(event_days.values()))
         decision_pts = evaluator.evaluate(timelines[patientid])
@@ -130,6 +131,8 @@ def pull_from_red_cap(config):
         timelines[patientid].decision_points = decision_pts
         logger.info("decision points for patient {} timeline: {}".format(patientid, timelines[patientid].decision_points))
         sum_dps += len(timelines[patientid].decision_points)
+        for dp in decision_pts:
+            dp_type[dp.label_cause] = dp_type.get(dp.label_cause, 0) + 1
 
     tot_pat = len(timelines.keys())
     logger.info("Total Patients: {}".format(tot_pat))
@@ -144,6 +147,7 @@ def pull_from_red_cap(config):
     tot_time_btw = sum([t.get_time_between_decision_points() for _,t in timelines.items()])
     logger.info("AVG Time between Decision Points in days: {num}/{den} = {avg}".format(num=tot_time_btw, den=sum_dps,
                                                                               avg=(tot_time_btw / sum_dps)))
+    logger.info("Breakdown of Decision Point Reasons: {}".format(dp_type))
 
     return timelines
 
@@ -175,15 +179,18 @@ def evaluate_timelines_for_trainingrows(timelines, config):
     training_df.to_pickle(path=output_path)
     logger.info("wrote training dataframe to output path: {o}".format(o=output_path))
 
-def write_train_dev_test(config):
+    return training_df
+
+def write_train_dev_test(config, training_df = None):
     """
     split input data frame to be training set and dev set.
     :param config:
     :return:
     """
     # read training data frame
-    filepath = os.path.sep.join([config['OUTPUT_FILEPATH'], "".join([config['TRAINING_DATAFRAME_NAME'], ".pkl"])])
-    training_df = pd.read_pickle(filepath)
+    if training_df is None:
+        filepath = os.path.sep.join([config['OUTPUT_FILEPATH'], "".join([config['TRAINING_DATAFRAME_NAME'], ".pkl"])])
+        training_df = pd.read_pickle(filepath)
 
     # holdout test sets
     df_train_dev, df_holdout = holdout_test(training_df, holdout_percent=0.1, seed=12345)
@@ -194,8 +201,13 @@ def write_train_dev_test(config):
     # write holdout test set
     target_holdout = df_holdout.iloc[:, df_holdout.columns == 'target']
     data_holdout = df_holdout.iloc[:, df_holdout.columns != 'target']
+    target_train_dev = df_train_dev.iloc[:, df_holdout.columns == 'target']
+    data_train_dev = df_train_dev.iloc[:, df_holdout.columns != 'target']
     data_holdout.to_pickle(os.path.join(config['OUTPUT_FILEPATH'], "data_holdout.pkl"))
     target_holdout.to_pickle(os.path.join(config['OUTPUT_FILEPATH'], "target_holdout.pkl"))
+    df_train_dev.to_pickle(os.path.join(config['OUTPUT_FILEPATH'], "train_dev_df.pkl"))
+    target_train_dev.to_pickle(os.path.join(config['OUTPUT_FILEPATH'], "data_train_dev.pkl"))
+    data_train_dev.to_pickle(os.path.join(config['OUTPUT_FILEPATH'], "target_train_dev.pkl"))
 
     # write train, dev sets
     for i in range(len(train_dev_split_sets)):
@@ -277,6 +289,6 @@ if __name__ == '__main__':
             config.update(json.load(fin))
 
     timelines = pull_from_red_cap(config)
-    evaluate_timelines_for_trainingrows(timelines, config)
+    training_df = evaluate_timelines_for_trainingrows(timelines, config)
 
-    write_train_dev_test(config)
+    write_train_dev_test(config, training_df=training_df)
