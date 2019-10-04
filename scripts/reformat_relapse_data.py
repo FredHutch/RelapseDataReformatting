@@ -120,7 +120,8 @@ def pull_from_red_cap(config):
     evaluator = PatientTimelineEvaluator(induction_timewindow=evaluation_params["INDUCTION_WINDOW"],
                                          mrd_timewindow=evaluation_params["MRD_WINDOW"],
                                          consolidation_timewindow=evaluation_params["CONSOLIDATION_WINDOW"],
-                                         dpoint_eval_window=evaluation_params["DECISION_POINT_EVAL_WINDOW"])
+                                         dpoint_eval_window=evaluation_params["DECISION_POINT_EVAL_WINDOW"],
+                                         dpoint_positive_labels=evaluation_params["DECISION_POINT_REASONS"])
     timelines = dict()
     sum_dps = 0
     for patientid, event_days in patient_eds.items():

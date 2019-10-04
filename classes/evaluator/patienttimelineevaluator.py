@@ -16,7 +16,10 @@ class PatientTimelineEvaluator:
     This represents the first attempt at training evaluation (2019 JUL 29)
 
     """
-
+    DECISION_POINT_LABELS = {"Death": "Death",
+			"Morph": "Morphological Relapse",
+			"MRD": "Induction/MRD Indication + New Tx"
+            }
     class Context:
         """
         keep track of previous decision points for determining target status
@@ -48,7 +51,8 @@ class PatientTimelineEvaluator:
             return any(ed.mrd_relapse() for ed in self.event_days)
 
     def __init__(self, induction_timewindow: int = 90, mrd_timewindow: int = 365,
-                 consolidation_timewindow: int = 365, dpoint_eval_window: int = 7):
+                 consolidation_timewindow: int = 365, dpoint_eval_window: int = 7,
+                 dpoint_positive_labels: List[str] = DECISION_POINT_LABELS):
         self.induction_timewindow = dt.timedelta(days=induction_timewindow)
         self.mrd_response_timewindow = dt.timedelta(days=mrd_timewindow)
         self.consolidation_timewindow = dt.timedelta(days=consolidation_timewindow)
@@ -62,6 +66,7 @@ class PatientTimelineEvaluator:
                                                               TreatmentEncounter.INDICATION_MAINTENANCE_CR: self.consolidation_timewindow,
                                                               TreatmentEncounter.INDICATION_OTHER_INDICATION: None,
                                                               })
+        self.dpoint_positive_labels = dpoint_positive_labels
 
 
     def evaluate(self, timeline: PatientTimeline):
@@ -135,7 +140,7 @@ class PatientTimelineEvaluator:
                         "  Target Day: {ed} Context: {c}  Cause: {cause}".format(
                             pid=timeline.patientid, dt=target_day.date, dp=dpt, ed=target_day, c=context, cause=cause))
                     dpt.label_cause = cause
-                    dpt.label = True
+                    dpt.label = cause in self.dpoint_positive_labels
                     dpt.target_date = target_day.date
                     break
             if dpt.label_cause is None:   # no valid positive label rule found
@@ -164,12 +169,12 @@ class PatientTimelineEvaluator:
                 dp=dpt, ed=day, etw=evaluation_timewindow, c=context))
         if time_window <= evaluation_timewindow:
             if day.died():
-                return "Death"
+                return PatientTimelineEvaluator.DECISION_POINT_LABELS["Death"]
             if day.morphological_relapse():
-                return "Morphological Relapse"
+                return PatientTimelineEvaluator.DECISION_POINT_LABELS["Morph"]
             if any(treatment not in dpt.treatments for treatment in day.treatments) and (
                     {TreatmentEncounter.INDICATION_INDUCTION, TreatmentEncounter.INDICATION_MRD_TREATMENT} & day.indications):
-                return "Induction/MRD Indication + New Tx"
+                return PatientTimelineEvaluator.DECISION_POINT_LABELS["MRD"]
 
         return None
 
