@@ -103,13 +103,12 @@ def pull_from_red_cap(config):
 
     for form in project.forms:
         try:
-            intermediate_df = bucket_features(project.export_records(forms=[form], format='df'), BUCKETS)   
+            intermediate_df = bucket_features(project.export_records(forms=[form], format='df'), BUCKETS)
         except RedcapError:
             logger.warning("Failure to export records from REDCap for form: {}".format(form))
             continue        
         events = map_instrument_df_to_class(form, intermediate_df)
-
-        if form == 'patient_id': 
+        if form == 'patient_id':
             gateway_df = pull_gateway_data(config)
             events += map_instrument_df_to_class('gateway_encounter', gateway_df)
         for event in events:
@@ -146,6 +145,9 @@ def pull_from_red_cap(config):
     logger.info("AVG Time between Decision Points in days: {num}/{den} = {avg}".format(num=tot_time_btw, den=sum_dps,
                                                                               avg=(tot_time_btw / sum_dps)))
 
+    return timelines
+
+def evaluate_timelines_for_trainingrows(timelines, config):
     data_dict_pkl_path = os.path.realpath(config["DATA_DICTIONARY"]["data_dict"])
     data_dict_csv_path = os.path.realpath(config["DATA_DICTIONARY"]["data_dict_csv"])
     categorical_feature_path = os.path.realpath(config["DATA_DICTIONARY"]["categorical_feature"])
@@ -275,5 +277,7 @@ if __name__ == '__main__':
         with open(os.path.join(cd, c), 'r') as fin:
             config.update(json.load(fin))
 
-    pull_from_red_cap(config)
+    timelines = pull_from_red_cap(config)
+    evaluate_timelines_for_trainingrows(timelines, config)
+
     write_train_dev_test(config)
