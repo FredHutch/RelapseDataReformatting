@@ -124,6 +124,7 @@ def pull_from_red_cap(config):
     timelines = dict()
     sum_dps = 0
     dp_type = dict()
+    dp_label = dict()
     for patientid, event_days in patient_eds.items():
         timelines[patientid] = PatientTimeline(patientid, list(event_days.values()))
         decision_pts = evaluator.evaluate(timelines[patientid])
@@ -133,6 +134,7 @@ def pull_from_red_cap(config):
         sum_dps += len(timelines[patientid].decision_points)
         for dp in decision_pts:
             dp_type[dp.label_cause] = dp_type.get(dp.label_cause, 0) + 1
+            dp_label[dp.label] = dp_label.get(dp.label, 0) + 1
 
     tot_pat = len(timelines.keys())
     logger.info("Total Patients: {}".format(tot_pat))
@@ -148,6 +150,7 @@ def pull_from_red_cap(config):
     logger.info("AVG Time between Decision Points in days: {num}/{den} = {avg}".format(num=tot_time_btw, den=sum_dps,
                                                                               avg=(tot_time_btw / sum_dps)))
     logger.info("Breakdown of Decision Point Reasons: {}".format(dp_type))
+    logger.info("Breakdown of Decision Point Labels: {}".format(dp_label))
 
     return timelines
 
