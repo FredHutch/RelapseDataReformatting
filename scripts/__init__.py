@@ -57,3 +57,13 @@ BUCKETS = {'txage':{0: (0, 1), 1: (1, 12), 2: (13, 18), 3: (18, 60), 4: (60, 160
            'bm_blasts':{0: (0, 1), 1:(1, 5), 2:(5, 20), 3:(20, 50), 4:(50, 100)},
            'wbc':{0: (0, .5), 1: (.5, 1), 2:(1, 10), 3: (10, 30), 4:(30, 50), 5: (50,100)}
            }
+
+FEATURE_RECODE_MAP = {
+    'rx_indication_3': 'rx_indication_maintenance_consolidation',
+    'rx_indication_4': 'rx_indication_maintenance_consolidation',
+    'e_treatment___1': 'Chemotherapy',
+    'e_treatment___2': 'Chemotherapy',
+    'e_treatment___6': 'Hypomethylating',
+    'e_treatment___10': 'DLI',
+    'e_treatment___11': 'HCT2',
+}

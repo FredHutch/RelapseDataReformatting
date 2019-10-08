@@ -15,6 +15,7 @@ class DataDictionary():
     def __init__(self, data_dict_csv_path=None, data_dict_pkl_path=None, categorical_feature_path=None):
         self.code_cols = {}
         self.categorical_cols = {}
+        self.combine_cols = []
         self.numeric_cols = []
         self.drop_cols = []
         self.code_mappings = {}        
@@ -68,6 +69,8 @@ class DataDictionary():
                     self.code_cols[row['Name']] = (row['DataTreatment'], row['DataType'], row['Temporal'], row['OneHotEncoded'])
                 elif (row['DataTreatment'] == 'Numeric'):
                     self.numeric_cols.append(row['Name'])
+                elif (row['DataTreatment'] == 'Combine'):
+                    self.combine_cols.append(row['Name'])
                 else:
                     self.drop_cols.append(row['Name'])        
 

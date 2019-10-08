@@ -2,6 +2,8 @@ import logging
 from operator import itemgetter
 from classes.collection.patienttimeline import PatientTimeline
 
+from scripts import FEATURE_RECODE_MAP
+
 logger = logging.getLogger(__name__)
 
 
@@ -82,10 +84,16 @@ class TrainingRowEvaluator:
                     }
         codeset = set()
         for col, val in rowdict.items():
+            # data manipulation
+            ## one-hot encoding
             cat_col, cat_val = datadict.is_categorical_var(col, val)
             if cat_col:
                 col = cat_col
                 val = cat_val
+            ## create meta feature for treatment and indication
+            if col in FEATURE_RECODE_MAP:
+                col = FEATURE_RECODE_MAP.get(col)
+            # map feature to data dictionary
             direct_codekey = datadict.code_cols.get(col)
             if col in datadict.drop_cols:
                 pass
