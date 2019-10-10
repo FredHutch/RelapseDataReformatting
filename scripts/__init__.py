@@ -59,6 +59,8 @@ BUCKETS = {'txage':{0: (0, 1), 1: (1, 12), 2: (13, 18), 3: (18, 60), 4: (60, 160
            }
 
 FEATURE_RECODE_MAP = {
+    'rx_indication_1': 'rx_indication_relapse',
+    'rx_indication_2': 'rx_indication_mrd',
     'rx_indication_3': 'rx_indication_maintenance_consolidation',
     'rx_indication_4': 'rx_indication_maintenance_consolidation',
     'e_treatment___1': 'Chemotherapy',
