@@ -197,9 +197,9 @@ def write_train_dev_test(config, training_df = None):
         training_df = pd.read_pickle(filepath)
 
     # holdout test sets
-    df_train_dev, df_holdout = holdout_test(training_df, holdout_percent=0.1, seed=12345)
+    df_train_dev, df_holdout = holdout_test(training_df, holdout_percent=0.1, seed=12345, match_num=config['MATCH_NUM'])
     # split training, dev sets
-    train_dev_split_sets = train_dev_split_cv(df_train_dev, k_folds=5)
+    train_dev_split_sets = train_dev_split_cv(df_train_dev, k_folds=5, match_num=config['MATCH_NUM'])
 
     # write to pkl
     # write holdout test set
@@ -220,7 +220,7 @@ def write_train_dev_test(config, training_df = None):
             train_dev_split_sets[i][k].to_pickle(outpath)
             logger.info("wrote train, dev data frame to output path: {o}".format(o=outpath))
 
-def train_dev_split_cv(df, k_folds = None):
+def train_dev_split_cv(df, k_folds=None, match_num=None):
     """
     split train dev sets using cross validation
     To-do: integrate more CV methods, e.g., loo, lop, etc
@@ -229,7 +229,6 @@ def train_dev_split_cv(df, k_folds = None):
     :return: data_train,  in lists
     """
     output = []
-
     X = df.iloc[:, df.columns != 'target']
     y = df.target.to_frame()
 
@@ -248,7 +247,7 @@ def train_dev_split_cv(df, k_folds = None):
         output.append(df_subset)
     return output
 
-def holdout_test(df, holdout_percent = None, seed = None):
+def holdout_test(df, holdout_percent=None, seed=None, match_num=None):
     """
     partition holdout test set at PID level
     :param df: input data
@@ -263,11 +262,18 @@ def holdout_test(df, holdout_percent = None, seed = None):
     n_pid = len(pid_list)
     sep_index = int(n_pid*holdout_percent)
     df['len'] = df['to_event'].str.len()
+    if match_num:
+        df = limit_to_match_controls(df, match_num)
     df_holdout = df.loc[df.PID.isin(perm[:sep_index])].sort_values(by='len').drop(columns='len')
-    df_train_dev = df.loc[df.PID.isin(perm[sep_index:])].sort_values(by='len').drop(columns='len')
-
+    df_train_dev = df.loc[df.PID.isin(perm[sep_index:])].sort_values(by='len').drop(columns='len')  
     return df_train_dev, df_holdout
 
+def limit_to_match_controls(df, match_num):
+    """
+    return dataframe with same number of negative (no relapse) events
+    each paired with 'match_num' number of positive relapse events by similar sequence len
+    """
+    return df
 
 def get_sorted_pid_list(df):
     """

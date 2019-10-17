@@ -21,9 +21,5 @@
 			"Morph",
 			"MRD"]
 	},
-	"DEFAULT_VALUES":{
-		"X":0,
-		"Y":0,
-		"Z":0
-	}
+	"MATCH_NUM":1
 }
