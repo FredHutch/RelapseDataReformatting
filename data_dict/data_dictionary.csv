@@ -992,7 +992,6 @@ e_status_2,vital_status,Code,Binary,Static,Manual
 rx_indication_maintenance_consolidation,treatment_event,Code,Binary,Time-Varying,Yes
 rx_indication_relapse,treatment_event,Code,Binary,Time-Varying,Yes
 rx_indication_mrd,treatment_event,Code,Binary,Time-Varying,Yes
-rx_indication_other,treatment_event,Code,Binary,Time-Varying,Yes
 Chemotherapy,treatment_event,Code,Binary,Time-Varying,Yes
 Hypomethylating,treatment_event,Code,Binary,Time-Varying,Yes
 DLI,treatment_event,Code,Binary,Time-Varying,Yes
