@@ -197,7 +197,7 @@ def write_train_dev_test(config, training_df = None):
         training_df = pd.read_pickle(filepath)
 
     # holdout test sets
-    df_train_dev, df_holdout = holdout_test(training_df, holdout_percent=0.1, seed=12345, match_num=config['MATCH_NUM'])
+    df_train_dev, df_holdout = holdout_test(training_df, holdout_percent=0.1, seed=config['SEED'], match_num=config['MATCH_NUM'])
     # split training, dev sets
     train_dev_split_sets = train_dev_split_cv(df_train_dev, k_folds=5, match_num=config['MATCH_NUM'])
 
@@ -265,21 +265,21 @@ def holdout_test(df, holdout_percent=None, seed=None, match_num=None):
     df_holdout = df.loc[df.PID.isin(perm[:sep_index])].sort_values(by='len').drop(columns='len')
     df_train_dev = df.loc[df.PID.isin(perm[sep_index:])].sort_values(by='len').drop(columns='len')
     if match_num:
-        df_holdout = limit_to_match_controls(df_holdout, match_num)
-        df_train_dev = limit_to_match_controls(df_train_dev, match_num)
+        df_holdout = limit_to_match_controls(df_holdout, seed, match_num)
+        df_train_dev = limit_to_match_controls(df_train_dev, seed, match_num)
     return df_train_dev, df_holdout
 
-def limit_to_match_controls(df, match_num):
+def limit_to_match_controls(df, seed, match_num):
     """
     return dataframe with same number of negative (no relapse) events
     each paired with 'match_num' number of positive relapse events by similar sequence len
     """
     new_df = pd.DataFrame(columns=df.columns)
-    for i in range(1,max(df['to_event'].str.len())):
+    for i in range(1, max(df['to_event'].str.len())):
         seq_df = df.loc[(df['to_event'].str.len() == i)]
         try:
             neg = seq_df.loc[(df['target'] == 0)]
-            pos = seq_df.loc[(df['target'] == 1)].sample(len(neg), random_state=1234)
+            pos = seq_df.loc[(df['target'] == 1)].sample(match_num*len(neg), random_state=seed)
             new_df = new_df.append(neg)
             new_df = new_df.append(pos)
         except:

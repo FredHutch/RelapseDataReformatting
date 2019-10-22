@@ -21,5 +21,6 @@
 			"Morph",
 			"MRD"]
 	},
-	"MATCH_NUM":1
+	"MATCH_NUM":1,
+	"SEED":1234
 }
