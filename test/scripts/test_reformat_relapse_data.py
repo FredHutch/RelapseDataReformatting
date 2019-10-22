@@ -7,6 +7,7 @@ from scripts.reformat_relapse_data import limit_to_match_controls
 class TestMatching:
 
     def setup(self):
+        self.seed = 1
         to_event = [[1, 3], [1, 2], [1, 2, 3]]
         target = [1, 0, 1]
         codes = [[[1, 2, 3], []], [[4], [5, 6]], [[7], [8], [9]]]
@@ -33,20 +34,20 @@ class TestMatching:
         ids = ['A', 'B']
         expected = pd.DataFrame({'ids': ids, 'codes': expected_codes, 'to_event': expected_to_event,
                                  'target': expected_target}, index=ids)
-        actual = limit_to_match_controls(self.single_df, 1)
+        actual = limit_to_match_controls(self.single_df, seed=self.seed, match_num=1 )
 
         actual.sort_index(inplace=True)
         expected.sort_index(inplace=True)
         assert (actual.values == expected.values).all()
 
     def test_limit_to_match_controls_double_match(self):
-        expected_to_event = [[1, 3], [1, 2], [1, 2, 3], [4, 5, 6], [7, 8, 9]]
-        expected_target = [1, 0, 1, 0, 1]
-        expected_codes = [[[1, 2, 3], []], [[4], [5, 6]], [[7], [8], [9]], [[10], [11], [12]], [[13], [14], [15]]]
-        expected_ids = ['A', 'B', 'C', 'D', 'E']
+        expected_to_event = [[1, 2, 3], [4, 5, 6], [10, 11, 12]]
+        expected_target = [1, 0, 1]
+        expected_codes = [[[7], [8], [9]], [[10], [11], [12]], [[16], [17], [18]]]
+        expected_ids = ['C', 'D', 'F']
         expected = pd.DataFrame({'ids': expected_ids, 'codes': expected_codes, 'to_event': expected_to_event,
                                  'target': expected_target}, index=expected_ids)
-        actual = limit_to_match_controls(self.mult_df, 2)
+        actual = limit_to_match_controls(self.multi_df, seed=self.seed, match_num=2)
 
         actual.sort_index(inplace=True)
         expected.sort_index(inplace=True)

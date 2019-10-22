@@ -276,7 +276,7 @@ def limit_to_match_controls(df, seed, match_num):
     each paired with 'match_num' number of positive relapse events by similar sequence len
     """
     new_df = pd.DataFrame(columns=df.columns)
-    for i in range(1, max(df['to_event'].str.len())): #for 1 to max number events across our training rows
+    for i in set(df['to_event'].str.len()): #for 1 to max number events across our training rows
         seq_df = df.loc[(df['to_event'].str.len() == i)] #all entries of event length i
         try:
             neg = seq_df.loc[(df['target'] == 0)]
