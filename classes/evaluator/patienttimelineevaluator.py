@@ -16,10 +16,7 @@ class PatientTimelineEvaluator:
     This represents the first attempt at training evaluation (2019 JUL 29)
 
     """
-    DECISION_POINT_LABELS = {"Death": "Death",
-			"Morph": "Morphological Relapse",
-			"MRD": "Induction/MRD Indication + New Tx"
-            }
+    DECISION_POINT_LABELS = ["Death","Morph","MRD"]
     class Context:
         """
         keep track of previous decision points for determining target status
@@ -169,12 +166,12 @@ class PatientTimelineEvaluator:
                 dp=dpt, ed=day, etw=evaluation_timewindow, c=context))
         if time_window <= evaluation_timewindow:
             if day.died():
-                return PatientTimelineEvaluator.DECISION_POINT_LABELS["Death"]
+                return "Death"
             if day.morphological_relapse():
-                return PatientTimelineEvaluator.DECISION_POINT_LABELS["Morph"]
+                return "Morph"
             if any(treatment not in dpt.treatments for treatment in day.treatments) and (
                     {TreatmentEncounter.INDICATION_INDUCTION, TreatmentEncounter.INDICATION_MRD_TREATMENT} & day.indications):
-                return PatientTimelineEvaluator.DECISION_POINT_LABELS["MRD"]
+                return "MRD"
 
         return None
 
@@ -192,8 +189,3 @@ class PatientTimelineEvaluator:
 
         logger.warning("Alert! No valid Indication found in Indications: {ind} Returning Default".format(ind=indications))
         return None
-
-
-
-
-

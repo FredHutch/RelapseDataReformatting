@@ -261,11 +261,12 @@ def holdout_test(df, holdout_percent=None, seed=None, match_num=None):
     perm = np.random.permutation(pid_list)
     n_pid = len(pid_list)
     sep_index = int(n_pid*holdout_percent)
-    df['len'] = df['to_event'].str.len()
-    if match_num:
-        df = limit_to_match_controls(df, match_num)
+    df['len'] = df['to_event'].str.len()    
     df_holdout = df.loc[df.PID.isin(perm[:sep_index])].sort_values(by='len').drop(columns='len')
-    df_train_dev = df.loc[df.PID.isin(perm[sep_index:])].sort_values(by='len').drop(columns='len')  
+    df_train_dev = df.loc[df.PID.isin(perm[sep_index:])].sort_values(by='len').drop(columns='len')
+    if match_num:
+        df_holdout = limit_to_match_controls(df_holdout, match_num)
+        df_train_dev = limit_to_match_controls(df_train_dev, match_num)
     return df_train_dev, df_holdout
 
 def limit_to_match_controls(df, match_num):
@@ -273,7 +274,17 @@ def limit_to_match_controls(df, match_num):
     return dataframe with same number of negative (no relapse) events
     each paired with 'match_num' number of positive relapse events by similar sequence len
     """
-    return df
+    new_df = pd.DataFrame(columns=df.columns)
+    for i in range(1,max(df['to_event'].str.len())):
+        seq_df = df.loc[(df['to_event'].str.len() == i)]
+        try:
+            neg = seq_df.loc[(df['target'] == 0)]
+            pos = seq_df.loc[(df['target'] == 1)].sample(len(neg), random_state=1234)
+            new_df = new_df.append(neg)
+            new_df = new_df.append(pos)
+        except:
+            logger.info("no matched controls for sequence length: {s}".format(s=i))
+    return new_df
 
 def get_sorted_pid_list(df):
     """
