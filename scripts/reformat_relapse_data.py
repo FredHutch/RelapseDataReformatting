@@ -254,7 +254,7 @@ def holdout_test(df, holdout_percent=None, seed=None, match_num=None):
     :param holdout_percent: % of data hold out for testing
     :return: two sets: holdout and (train+dev)
     """
-    np.random.seed(seed)
+    np.random.RandomState(seed)
 
     # get unique PID list (sorted acs)
     pid_list = get_sorted_pid_list(df)
