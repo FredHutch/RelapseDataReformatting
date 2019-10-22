@@ -269,14 +269,15 @@ def holdout_test(df, holdout_percent=None, seed=None, match_num=None):
         df_train_dev = limit_to_match_controls(df_train_dev, seed, match_num)
     return df_train_dev, df_holdout
 
+
 def limit_to_match_controls(df, seed, match_num):
     """
     return dataframe with same number of negative (no relapse) events
     each paired with 'match_num' number of positive relapse events by similar sequence len
     """
     new_df = pd.DataFrame(columns=df.columns)
-    for i in range(1, max(df['to_event'].str.len())):
-        seq_df = df.loc[(df['to_event'].str.len() == i)]
+    for i in range(1, max(df['to_event'].str.len())): #for 1 to max number events across our training rows
+        seq_df = df.loc[(df['to_event'].str.len() == i)] #all entries of event length i
         try:
             neg = seq_df.loc[(df['target'] == 0)]
             pos = seq_df.loc[(df['target'] == 1)].sample(match_num*len(neg), random_state=seed)
