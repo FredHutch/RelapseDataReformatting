@@ -275,16 +275,23 @@ def limit_to_match_controls(df, seed, match_num):
     return dataframe with same number of negative (no relapse) events
     each paired with 'match_num' number of positive relapse events by similar sequence len
     """
+    pos_df = df.loc[(df['target'] == 1)]
+    neg_df = df.loc[(df['target'] == 0)]
+
     new_df = pd.DataFrame(columns=df.columns)
-    for i in set(df['to_event'].str.len()): #for 1 to max number events across our training rows
-        seq_df = df.loc[(df['to_event'].str.len() == i)] #all entries of event length i
-        try:
-            neg = seq_df.loc[(df['target'] == 0)]
-            pos = seq_df.loc[(df['target'] == 1)].sample(match_num*len(neg), random_state=seed)
-            new_df = new_df.append(neg)
-            new_df = new_df.append(pos)
-        except:
-            logger.info("no matched controls for sequence length: {s}".format(s=i))
+    for i in set(neg_df['to_event'].str.len()): # for each sequence length in negative instances        
+        for n, row in neg_df.loc[(neg_df['to_event'].str.len() == i)].iterrows(): # negative entries of event length i
+            min_dist = min(abs(pos_df['to_event'].str.len() - i)) # closest positive instance seedquence len
+            pos_inst_df = pos_df.loc[(pos_df['to_event'].str.len() - i) == min_dist]
+            try:
+                pos_pick = pos_inst_df.sample(match_num*1, random_state=seed)
+                pos_df = pos_df.drop(index=pos_pick.index)
+                # append both positive and negative instances
+                new_df = new_df.append(pos_pick)
+                new_df = new_df.append(row)
+            except:
+                logger.info("missing matched controls for sequence length: {s}".format(s=i))
+
     return new_df
 
 def get_sorted_pid_list(df):
