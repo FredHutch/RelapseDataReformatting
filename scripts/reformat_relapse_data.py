@@ -284,7 +284,8 @@ def limit_to_match_controls(df, seed, match_num):
             min_dist = min(abs(pos_df['to_event'].str.len() - i)) # closest positive instance seedquence len
             pos_inst_df = pos_df.loc[(pos_df['to_event'].str.len() - i) == min_dist]
             try:
-                pos_pick = pos_inst_df.sample(match_num*1, random_state=seed)
+                # NOTE: this will still skip over potential matches if there are not at least 'match_num'
+                pos_pick = pos_inst_df.sample(match_num, random_state=seed)
                 pos_df = pos_df.drop(index=pos_pick.index)
                 # append both positive and negative instances
                 new_df = new_df.append(pos_pick)
