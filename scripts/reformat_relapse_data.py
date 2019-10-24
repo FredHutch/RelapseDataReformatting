@@ -197,9 +197,9 @@ def write_train_dev_test(config, training_df = None):
         training_df = pd.read_pickle(filepath)
 
     # holdout test sets
-    df_train_dev, df_holdout = holdout_test(training_df, holdout_percent=0.1, seed=12345)
+    df_train_dev, df_holdout = holdout_test(training_df, holdout_percent=0.1, seed=config['SEED'], match_num=config['MATCH_NUM'])
     # split training, dev sets
-    train_dev_split_sets = train_dev_split_cv(df_train_dev, k_folds=5)
+    train_dev_split_sets = train_dev_split_cv(df_train_dev, k_folds=5, match_num=config['MATCH_NUM'])
 
     # write to pkl
     # write holdout test set
@@ -220,7 +220,7 @@ def write_train_dev_test(config, training_df = None):
             train_dev_split_sets[i][k].to_pickle(outpath)
             logger.info("wrote train, dev data frame to output path: {o}".format(o=outpath))
 
-def train_dev_split_cv(df, k_folds = None):
+def train_dev_split_cv(df, k_folds=None, match_num=None):
     """
     split train dev sets using cross validation
     To-do: integrate more CV methods, e.g., loo, lop, etc
@@ -229,7 +229,6 @@ def train_dev_split_cv(df, k_folds = None):
     :return: data_train,  in lists
     """
     output = []
-
     X = df.iloc[:, df.columns != 'target']
     y = df.target.to_frame()
 
@@ -248,26 +247,53 @@ def train_dev_split_cv(df, k_folds = None):
         output.append(df_subset)
     return output
 
-def holdout_test(df, holdout_percent = None, seed = None):
+def holdout_test(df, holdout_percent=None, seed=None, match_num=None):
     """
     partition holdout test set at PID level
     :param df: input data
     :param holdout_percent: % of data hold out for testing
     :return: two sets: holdout and (train+dev)
     """
-    np.random.seed(seed)
+    np.random.RandomState(seed)
 
     # get unique PID list (sorted acs)
     pid_list = get_sorted_pid_list(df)
     perm = np.random.permutation(pid_list)
     n_pid = len(pid_list)
     sep_index = int(n_pid*holdout_percent)
-    df['len'] = df['to_event'].str.len()
+    df['len'] = df['to_event'].str.len()    
     df_holdout = df.loc[df.PID.isin(perm[:sep_index])].sort_values(by='len').drop(columns='len')
     df_train_dev = df.loc[df.PID.isin(perm[sep_index:])].sort_values(by='len').drop(columns='len')
-
+    if match_num:
+        df_holdout = limit_to_match_controls(df_holdout, seed, match_num)
+        df_train_dev = limit_to_match_controls(df_train_dev, seed, match_num)
     return df_train_dev, df_holdout
 
+
+def limit_to_match_controls(df, seed, match_num):
+    """
+    return dataframe with same number of negative (no relapse) events
+    each paired with 'match_num' number of positive relapse events by similar sequence len
+    """
+    pos_df = df.loc[(df['target'] == 1)]
+    neg_df = df.loc[(df['target'] == 0)]
+
+    new_df = pd.DataFrame(columns=df.columns)
+    for i in set(neg_df['to_event'].str.len()): # for each sequence length in negative instances        
+        for n, row in neg_df.loc[(neg_df['to_event'].str.len() == i)].iterrows(): # negative entries of event length i
+            min_dist = min(abs(pos_df['to_event'].str.len() - i)) # closest positive instance seedquence len
+            pos_inst_df = pos_df.loc[(pos_df['to_event'].str.len() - i) == min_dist]
+            try:
+                # NOTE: this will still skip over potential matches if there are not at least 'match_num'
+                pos_pick = pos_inst_df.sample(match_num, random_state=seed)
+                pos_df = pos_df.drop(index=pos_pick.index)
+                # append both positive and negative instances
+                new_df = new_df.append(pos_pick)
+                new_df = new_df.append(row)
+            except:
+                logger.info("missing matched controls for sequence length: {s}".format(s=i))
+
+    return new_df
 
 def get_sorted_pid_list(df):
     """

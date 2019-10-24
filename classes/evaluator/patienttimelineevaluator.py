@@ -16,7 +16,8 @@ class PatientTimelineEvaluator:
     This represents the first attempt at training evaluation (2019 JUL 29)
 
     """
-    DECISION_POINT_LABELS = ["Death", "Morph","MRD"]
+    DECISION_POINT_LABELS = ["Death","Morph","MRD"]
+
     class Context:
         """
         keep track of previous decision points for determining target status
@@ -168,11 +169,11 @@ class PatientTimelineEvaluator:
             if day.died():
                 return "Death"
             if day.morphological_relapse():
-                return 'Morph'
+                return "Morph"
             if any(treatment not in dpt.treatments for treatment in day.treatments) and (
                     {TreatmentEncounter.INDICATION_INDUCTION, TreatmentEncounter.INDICATION_MRD_TREATMENT} & day.indications):
-                return 'MRD'
-
+                return "MRD"
+              
         return None
 
     def _most_relevant_indication(self, indications):
