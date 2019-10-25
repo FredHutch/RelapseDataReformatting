@@ -205,8 +205,8 @@ def write_train_dev_test(config, training_df = None):
     # write holdout test set
     target_holdout = df_holdout.iloc[:, df_holdout.columns == 'target']
     data_holdout = df_holdout.iloc[:, df_holdout.columns != 'target']
-    target_train_dev = df_train_dev.iloc[:, df_holdout.columns == 'target']
-    data_train_dev = df_train_dev.iloc[:, df_holdout.columns != 'target']
+    target_train_dev = df_train_dev.iloc[:, df_train_dev.columns == 'target']
+    data_train_dev = df_train_dev.iloc[:, df_train_dev.columns != 'target']
     data_holdout.to_pickle(os.path.join(config['OUTPUT_FILEPATH'], "data_holdout.pkl"))
     target_holdout.to_pickle(os.path.join(config['OUTPUT_FILEPATH'], "target_holdout.pkl"))
     df_train_dev.to_pickle(os.path.join(config['OUTPUT_FILEPATH'], "train_dev_df.pkl"))
@@ -278,7 +278,12 @@ def limit_to_match_controls(df, seed, match_num):
     pos_df = df.loc[(df['target'] == 1)]
     neg_df = df.loc[(df['target'] == 0)]
 
-    new_df = pd.DataFrame(columns=df.columns)
+    new_df = pd.DataFrame()
+    # setting column dtypes directly on empty columns throws an error
+    # workaround found at:
+    # https://stackoverflow.com/questions/36462257/create-empty-dataframe-in-pandas-specifying-column-types
+    for c, d in zip(df.columns, df.dtypes):
+        new_df[c] = pd.Series(dtype=d)
     for i in set(neg_df['to_event'].str.len()): # for each sequence length in negative instances        
         for n, row in neg_df.loc[(neg_df['to_event'].str.len() == i)].iterrows(): # negative entries of event length i
             min_dist = min(abs(pos_df['to_event'].str.len() - i)) # closest positive instance seedquence len
